@@ -12,25 +12,26 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
+from dotenv import load_dotenv
 
-
+# Загружаем переменные окружения из .env (файл не в git)
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
-
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-^k%q36y*_)**k(f2y4ytcbu8f2^$9s12t!l&pm_da8ek6b+k19'
+SECRET_KEY = os.environ.get(
+    'DJANGO_SECRET_KEY',
+    'django-insecure-dev-only-change-me'  # fallback только для локальной разработки
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-#ALLOWED_HOSTS = ['127.0.0.3']
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = ['127.0.0.1']
+
 
 # Application definition
 
@@ -69,7 +70,6 @@ MIDDLEWARE = [
     "allauth.account.middleware.AccountMiddleware",
 
     'django.middleware.locale.LocaleMiddleware',
-
 ]
 
 ROOT_URLCONF = 'project.urls'
@@ -95,17 +95,14 @@ WSGI_APPLICATION = 'project.wsgi.application'
 LOCALE_PATHS = [
     os.path.join(BASE_DIR, 'locale')
 ]
-AUTHENTICATION_BACKENDS = [
-    # Needed to login by username in Django admin, regardless of `allauth`
-    'django.contrib.auth.backends.ModelBackend',
 
-    # `allauth` specific sign methods, such as login by e-mail
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend'
 ]
 
-# Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+# Database
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -115,57 +112,39 @@ DATABASES = {
 
 
 # Password validation
-# https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
 
 # Internationalization
-# https://docs.djangoproject.com/en/5.1/topics/i18n/
+LANGUAGE_CODE = 'ru'
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGES = [
+    ('en', 'English'),
+    ('ru', 'Russian'),
+]
 
 TIME_ZONE = 'Asia/Irkutsk'
-
 USE_I18N = True
-
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.1/howto/static-files/
-
+# Static files
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [BASE_DIR / "static"]
 
-STATICFILES_DIRS = [
-    BASE_DIR / "static"
-]
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-#Если пользователь авторизован
+# Если пользователь авторизован
 LOGIN_REDIRECT_URL = '/'
 
-
-#Если пользователь не аутентифицирован
+# Если пользователь не аутентифицирован
 LOGIN_URL = '/accounts/login/'
-
 
 
 ACCOUNT_EMAIL_REQUIRED = True
@@ -175,77 +154,44 @@ ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 
 
-
-#
-# SOCIALACCOUNT_PROVIDERS = {
-#     'google': {
-#         'SCOPE': ['profile', 'email'],
-#         'AUTH_PARAMS': {
-#             'access_type': 'online',
-#         },
-#         'APP': {
-#             'client_id': 'REDACTED',
-#             'secret': 'REDACTED',
-#             'key': ''
-#         }
-#     }
-# }
-#
-#
+# --- Google OAuth через allauth ---
+# client_id / secret берутся из БД allauth (SocialApp),
+# либо можно прописать их здесь через переменные окружения:
 
 SOCIALACCOUNT_PROVIDERS = {
     "google": {
-        "SCOPE": [
-            "profile",  # Доступ к имени и аватару
-            "email"
-        ],
-        "AUTH_PARAMS": {
-            "access_type": "online"
-        }
+        "SCOPE": ["profile", "email"],
+        "AUTH_PARAMS": {"access_type": "online"},
+        # Если хотите задавать через .env:
+        # "APP": {
+        #     "client_id": os.environ.get("GOOGLE_OAUTH_CLIENT_ID", ""),
+        #     "secret": os.environ.get("GOOGLE_OAUTH_CLIENT_SECRET", ""),
+        #     "key": "",
+        # },
     }
 }
 
-
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 465
-
-EMAIL_HOST_USER = 'boolplayground@gmail.com'
-EMAIL_HOST_PASSWORD = 'REDACTED'
-#EMAIL_HOST_PASSWORD = 'REDACTED'
-
-EMAIL_USE_SSL = True
-DEFAULT_FROM_EMAIL = 'boolplayground@gmail.com'
-
-
-LANGUAGE_CODE = 'ru'  # Язык по умолчанию
-
-LANGUAGES = [
-    ('en', 'English'),
-    ('ru', 'Russian'),  # Добавьте нужные языки
-]
-
-LOCALE_PATHS = [
-    os.path.join(BASE_DIR, 'locale'),  # Укажите путь к папке с переводами
-]
-
-SOCIALACCOUNT_LOGIN_ON_GET = True #Перейти сразу на страницу с авторизацией через Google
-
+SOCIALACCOUNT_LOGIN_ON_GET = True
 SOCIALACCOUNT_ADAPTER = "sign.allauth_adapter.MySocialAccountAdapter"
 
 
+# --- Email ---
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 465
+EMAIL_USE_SSL = True
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+
+# --- Media ---
 MEDIA_URL = '/media/'
-
-MEDIAFILES_DIRS = [
-    BASE_DIR / "media"
-]
-
-MEDIA_ROOT = os.path.join(BASE_DIR,'media')
+MEDIAFILES_DIRS = [BASE_DIR / "media"]
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
-
-
+# --- Celery ---
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379/1'
 CELERY_ACCEPT_CONTENT = ['json']
