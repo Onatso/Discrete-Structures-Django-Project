@@ -1,0 +1,268 @@
+{% include 'template_title.html' %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>task2</title>
+    <style>
+        body {
+            background-color: #00007F;
+            color: #BFBFBF;
+            font-family: 'Courier New', monospace;
+            margin: 0;
+            padding: 2px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .panels {
+            display: flex;
+            gap: 2px;
+            flex-grow: 1;
+        }
+        .panel {
+            flex: 1;
+            border: 1px solid #00FFFF;
+            background: #00007F;
+            display: flex;
+            flex-direction: column;
+        }
+        .panel-header {
+            background: #0000FF;
+            color: #FFFFFF;
+            padding: 0 2px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .drive-list {
+            background: #0000FF;
+            border: none;
+            color: #FFFFFF;
+        }
+        .file-list {
+            padding: 2px;
+            flex-grow: 1;
+        }
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0 2px;
+            user-select: none;
+        }
+        .dir { color: #FFFFFF; }
+        .exe { color: #00FF00; }
+        .txt { color: #00FFFF; }
+        .up-dir { color: #FFFFFF; }
+
+        .panel-info {
+            background: #0000FF;
+            color: #00FFFF;
+            padding: 0 2px;
+            font-size: 0.9em;
+            border-top: 1px solid #00FFFF;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #00007F;
+            border: 1px solid #00FFFF;
+            width: 600px;
+        }
+        .modal-header {
+            background: #0000FF;
+            color: #FFFFFF;
+            padding: 2px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .modal-content {
+            padding: 5px;
+        }
+        textarea {
+            width: 100%;
+            height: 300px;
+            background: #00007F;
+            color: #BFBFBF;
+            border: 1px solid #00FFFF;
+            font-family: 'Courier New', monospace;
+            resize: none;
+        }
+        .modal-buttons {
+            text-align: right;
+            padding: 2px;
+        }
+        button {
+            background: #0000FF;
+            color: #FFFFFF;
+            border: 1px solid #00FFFF;
+            padding: 2px 10px;
+            margin-left: 5px;
+        }
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0 2px;
+            user-select: none;
+        }
+        .file-item.selected {
+            background-color: #008080;
+        }
+        #hiddenForm{
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="panels">
+        <div class="panel">
+            <div class="panel-header">
+                <span>C:\\</span>
+            </div>
+            <div class="file-list">
+                <div class="file-item up-dir">..</div>
+                <div class="file-item dir">Windows</div>
+                <div class="file-item dir">Program Files</div>
+                <div class="file-item dir">Users</div>
+                <div class="file-item txt">Вектор функции.txt</div>
+                <div class="file-item txt">0 или 1.txt</div>
+                <div class="file-item txt">номер аргумента.txt</div>
+                <div class="file-item exe">обработать.exe</div>
+            </div>
+            <div class="panel-info">
+                <span>Bytes: 15M</span>
+                <span>Files: 4</span>
+                <span>Folders: 3</span>
+                <span>Up 09.02.25 22:07</span>
+            </div>
+        </div>
+        <div class="panel">
+            <div class="panel-header">
+                <span>D:\\</span>
+            </div>
+            <div class="file-list">
+                <div class="file-item up-dir">..</div>
+                <div class="file-item dir">Projects</div>
+                <div class="file-item dir">Backup</div>
+                <div class="file-item txt">результат.txt</div>
+            </div>
+            <div class="panel-info">
+                <span>Bytes: 8M</span>
+                <span>Files: 1</span>
+                <span>Folders: 2</span>
+                <span>Up 09.02.25 22:07</span>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="editor">
+        <div class="modal-header">
+            <span id="modal-title">Редактор</span>
+            <button onclick="saveFile()">Сохранить</button>
+        </div>
+        <div class="modal-content">
+            <textarea id="file-content"></textarea>
+        </div>
+    </div>
+
+    <script>
+        const files = {
+            'C:\\': {
+                'Вектор функции.txt': '',
+                '0 или 1.txt': '',
+                'номер аргумента.txt': '',
+            },
+            'D:\\': {
+                'результат.txt': '',
+            }
+        };
+
+        let currentFile = '';
+        let currentDrive = 'C:\\';
+
+        function openEditor(filename) {
+            currentFile = filename;
+            document.getElementById('modal-title').textContent = filename;
+            document.getElementById('file-content').value = files[currentDrive][filename] || '';
+            document.getElementById('editor').style.display = 'block';
+        }
+
+        function saveFile() {
+            files[currentDrive][currentFile] = document.getElementById('file-content').value;
+            document.getElementById('editor').style.display = 'none';
+        }
+
+        document.querySelectorAll('.file-item:not(.dir)').forEach(item => {
+            item.addEventListener('dblclick', function() {
+                if(this.classList.contains('exe')) {
+                    if(this.textContent.includes('обработать.exe')) {
+                        const vector = files['C:\\']['Вектор функции.txt'];
+                        const zeroOrOne = files['C:\\']['0 или 1.txt'];
+                        const argument = files['C:\\']['номер аргумента.txt'];
+                        document.getElementById('hiddenFormInput1').value = vector;
+                        document.getElementById('hiddenFormInput2').value = zeroOrOne;
+                        document.getElementById('hiddenFormInput3').value = argument;
+                        submitForm();;
+                    }
+                    return;
+                }
+                if(this.classList.contains('up-dir')) {
+                    window.location.href='/';
+                    return;
+                }
+                openEditor(this.textContent.trim());
+            });
+        });
+
+        function submitForm(event) {
+            if (event) {
+                event.preventDefault();
+            }
+            const form = document.getElementById('hiddenForm');
+            const formData = new FormData(form);
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                //alert(data.ans);Ю
+                openEditor('результат.txt');
+                document.getElementById('file-content').value = data.ans;
+
+            })
+        }
+
+        window.onclick = function(e) {
+            if(e.target === document.getElementById('editor')) {
+                document.getElementById('editor').style.display = 'none';
+            }
+        }
+        document.querySelectorAll('.file-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                document.querySelectorAll('.file-item').forEach(i => i.classList.remove('selected'));
+                this.classList.add('selected');
+
+            });
+        });
+    </script>
+</body>
+</html>
+
+
+<form action="{% url 'task_detail' pk=task.pk %}" method="post" id="hiddenForm">
+    {% csrf_token %}
+    <input type="text" id="hiddenFormInput1" name = "vector">
+    <input type="text" id="hiddenFormInput2" name = "zeroOrOne">
+    <input type="text" id="hiddenFormInput3" name = "argument">
+</form>

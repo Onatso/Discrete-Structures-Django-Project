@@ -1,0 +1,305 @@
+{% include 'flatpages/default.html' %}
+
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Игра - имя функции</title>
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+
+            font-family: Arial, sans-serif;
+
+
+        }
+        .chat-container {
+            width: 400px;
+            height: 600px;
+            display: flex;
+            flex-direction: column;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            background: white;
+        }
+        .chat-header {
+            background: #0088cc;
+            color: white;
+            padding: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            position: relative;
+        }
+        .typing-indicator {
+            display: none;
+            text-align: center;
+            padding: 5px;
+            font-size: 14px;
+            color: gray;
+            background: #f1f1f1;
+        }
+        .close-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            font-size: 18px;
+        }
+        .chat-messages {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        .message {
+            max-width: 70%;
+            padding: 10px;
+            border-radius: 8px;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            overflow-wrap: break-word;
+            margin-bottom: 15px;
+        }
+        .message.user {
+            align-self: flex-end;
+            background: #dcf8c6;
+        }
+        .message.other {
+            align-self: flex-start;
+            background: #f1f1f1;
+        }
+        .chat-input {
+            display: flex;
+            flex-direction: column;
+            background: #f1f1f1;
+            padding: 10px;
+        }
+        .chat-input input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            outline: none;
+            resize: none;
+            min-height: 40px;
+        }
+        .chat-input button {
+            margin-top: 5px;
+            padding: 8px 12px;
+            border: none;
+            background: #0088cc;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .chat-messages::-webkit-scrollbar {
+            display: none;
+        }
+
+
+        .home-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background-color: #3498db;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background 0.3s, transform 0.2s;
+        }
+        .home-button img {
+            width: 24px;
+            height: 24px;
+            filter: invert(1);
+        }
+        .home-button:hover {
+            background-color: #2980b9;
+            transform: scale(1.1);
+        }
+        .openChat{
+            background-color: #3498db;
+        color: white;
+        font-size: 16px;
+        padding: 12px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background 0.3s;
+        }
+        .openChat:hover{
+            background-color: #2980b9;
+        }
+
+        #hiddenAchievementsForm{
+            display: none;
+        }
+    </style>
+</head>
+
+{% block title %}
+<center>
+    <h3>
+        {{task.title}}
+    </h3>
+</center>
+
+
+{% endblock title %}
+
+{% block content %}
+<body>
+<h4>{{task.description}}</h4>
+
+
+<div class="modal" id="chatModal">
+    <div class="chat-container">
+        <div class="chat-header">Владимир Пантелеев <span class="close-btn" onclick="closeChat()">&times;</span></div> <!--Если не получится подключить как окно, то заменить на ссылку на главную window.location.href='/'-->
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="typing-indicator" id="typingIndicator">Владимир печатает...</div>
+        <div class="chat-input">
+            <input type="text" id="messageInput" placeholder="Напишите сообщение..." disabled>
+            <button onclick="sendMessage()" disabled>Отправить</button>
+        </div>
+    </div>
+</div>
+
+
+<center>
+    <button class="openChat" onclick="openChat()">Открыть чат</button>
+</center>
+
+
+<script>
+        const functions = ["0001", "0111", "0110", "1110", "1000", "1101", "1001", "0010", "1011", "0100", "0000", "0101", "0011", "1010", "1100", "1111"];
+        const answers = [["конъюнкция", "умножение", "и", "логическое и", "логическое умножение"], ["дизъюнкция", "или", "логическое или", "включающее или"], ["сложение", "сложение по модулю", "сложение по модулю 2", "исключающее или", "xor"], ["штрих шеффера", "штрих", "отрицание конъюнкции"], ["стрелка пирса", "стрелка", "отрицание дизъюнкции"], ["импликация"], ["эквивалентность", "равенство", "равнозначность"], ["коимпликация", "отрицание импликации"], ["обратная импликация"], ["обратная коимпликация", "отрицание обратное импликации"], ["нуль", "ноль", "константа нуль", "константа ноль", "0", "константа 0"], ["у", "переменная у", "y", "переменная y", "y с крышкой", "y с крышкой"], ["x", "переменная x", "х", "переменная х"], ["не у", "не переменная у", "не y", "не переменная y", "отрицание у", "отрицание переменной у", "отрицание y", "отрицание переменной y", "инверсия у", "инверсия переменной у", "инверсия у", "инверсия переменной у"], ["не x", "не переменная x", "не х", "не переменная х", "отрицание x", "отрицание переменной x", "отрицание х", "отрицание переменной х", "инверсия x", "инверсия переменной x", "инверсия х", "инверсия переменной х", "x с крышкой", "х с крышкой"], ["один", "константа один", "1", "константа 1"]];
+        let currentFunction = "";
+        let correctAnswer = "";
+        const positiveResponses = ["Да, это верно!", "Удивительно, но Вы правы!", "ОГО! Верно, не докопаться!", "Да, Вы правы!", "Я вижу, Вы неплохо разбираетесь в дискретной математике, не хотите ко мне на кафедру?", "Умочка, правильный ответ))", "👍", "❤️", "Да Вы реально крутышка :3", "Да, так и есть!"];
+        const negativeResponses = ["Нет, Вы не правы, Вы злостный вор государственного бюджета!", "Если парень не способен правильно ответить на вопрос, который беспокоит его девушку, то что это значит? Делайте выводы!", "Не концептуально, а-я-яй", "👎", "Путь на кафедру для Вас закрыт!", "ХАХХАХАХАХАХАХААХ!!! НЕВЕРНО!! ПОПРОБУЙ ЕЩЕ!!!", "Вы потеряли все мое уважение..", "Вы не умеете читать, писать и говорить..", "Фейспалм, чел, ты в муте...", "Нет."];
+
+        function closeChat() {
+            document.getElementById("chatModal").style.display = "none";
+            document.getElementById("chatMessages").innerHTML = "";
+        }
+
+        function openChat() {
+            document.getElementById("chatModal").style.display = "flex";
+            askQuestion(true);
+        }
+
+        function askQuestion(firstTime = false) {
+    document.getElementById("typingIndicator").style.display = "block";
+    document.getElementById("messageInput").disabled = false;
+    document.querySelector(".chat-input button").disabled = true;
+
+    setTimeout(() => {
+        document.getElementById("typingIndicator").style.display = "none";
+        let index = Math.floor(Math.random() * functions.length);
+        currentFunction = functions[index];
+        correctAnswer = answers[index];
+
+        const messageElement = document.createElement("div");
+        messageElement.classList.add("message", "other");
+        messageElement.textContent = firstTime
+            ? `Здравствуйте, подскажите название этой функции: ${currentFunction}`
+            : `Подскажите название этой функции: ${currentFunction}`;
+
+        document.getElementById("chatMessages").appendChild(messageElement);
+        document.querySelector(".chat-input button").disabled = false;
+    }, 3000);
+}
+
+document.getElementById("messageInput").addEventListener("keydown", function(event) {
+    if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        if (!document.querySelector(".chat-input button").disabled) {
+            sendMessage();
+        }
+    }
+});
+
+let right_answers_count = 0;
+
+function sendMessage() {
+    const input = document.getElementById("messageInput");
+    const messageText = input.value.trim();
+    if (messageText === "") return;
+
+    const messageElement = document.createElement("div");
+    messageElement.classList.add("message", "user");
+    messageElement.textContent = messageText;
+    document.getElementById("chatMessages").appendChild(messageElement);
+    input.value = "";
+
+    const userAnswer = messageText.toLowerCase().trim();
+    const isCorrect = correctAnswer.includes(userAnswer);
+
+    setTimeout(() => {
+        document.getElementById("typingIndicator").style.display = "block";
+        setTimeout(() => {
+            document.getElementById("typingIndicator").style.display = "none";
+            const reply = isCorrect
+                ? positiveResponses[Math.floor(Math.random() * positiveResponses.length)]
+                : negativeResponses[Math.floor(Math.random() * negativeResponses.length)];
+            if (isCorrect){
+                right_answers_count++;
+            }
+            else{
+                right_answers_count = 0;
+            }
+            if (right_answers_count == 100){
+                const form = document.getElementById("hiddenAchievementsForm");
+                const formData = new FormData(form);
+                fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers : {
+                        'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                    }
+                })
+                .then(response => response.json())
+            }
+            const responseElement = document.createElement("div");
+            responseElement.classList.add("message", "other");
+            responseElement.textContent = reply;
+            document.getElementById("chatMessages").appendChild(responseElement);
+            askQuestion();
+        }, 3000);
+    }, 500);
+}
+    </script>
+
+
+<a href="/?page={{page_obj.number}}" class="home-button">
+        <img src="https://cdn-icons-png.flaticon.com/512/25/25694.png" alt="Home">
+</a>
+
+
+</body>
+</html>
+
+
+<form action = "{% url 'task_detail' pk=task.pk %}" method = 'post' id = "hiddenAchievementsForm">
+    {% csrf_token %}
+    <input type = "text" name = "is_first_achievement" value = "Yes!">
+</form>
+
+{% endblock content %}

@@ -1,0 +1,1115 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>task4</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background: #000;
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 16px;
+            position: relative;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(45deg, #ff0050, #00f2ea);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
+        }
+
+        .header-icons {
+            display: flex;
+            gap: 20px;
+        }
+
+        .header-icons i {
+            font-size: 22px;
+            cursor: pointer;
+        }
+
+        .container {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .sidebar {
+            width: 70px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            padding-bottom: 30px;
+            gap: 30px;
+            position: relative;
+            z-index: 5;
+        }
+
+        .action-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .action-btn i {
+            font-size: 24px;
+            background: rgba(255, 255, 255, 0.2);
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn i:hover {
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .action-btn .avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #ff0050, #00f2ea);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid white;
+            margin-bottom: 8px;
+            overflow: hidden;
+        }
+
+        .action-btn .avatar img {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .action-btn span {
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .video-feed {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .video-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .video-container.active {
+            opacity: 1;
+            z-index: 2;
+        }
+
+        .video-player {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background: #111;
+        }
+
+        .video-overlay {
+            position: absolute;
+            bottom: 80px;
+            left: 16px;
+            right: 16px;
+            z-index: 3;
+        }
+
+        .video-info {
+            margin-bottom: 20px;
+        }
+
+        .username {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .username span {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .caption {
+            font-size: 16px;
+            margin-bottom: 8px;
+            max-width: 80%;
+            line-height: 1.4;
+        }
+
+        .hashtags {
+            font-size: 16px;
+            color: #00f2ea;
+            margin-bottom: 12px;
+        }
+
+        .music {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .music i {
+            font-size: 18px;
+        }
+
+        .comments-section {
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 12px;
+            padding: 12px;
+            margin-top: 15px;
+            max-height: 150px;
+            overflow-y: auto;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .comments-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .comments-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .comments-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .comment {
+            display: flex;
+            gap: 10px;
+            padding: 5px 0;
+        }
+
+        .comment-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #ff0050, #00f2ea);
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .comment-avatar img {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .comment-content {
+            flex: 1;
+        }
+
+        .comment-author {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+
+        .comment-text {
+            font-size: 14px;
+            line-height: 1.3;
+        }
+
+        .comment-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 4px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .comment-actions i {
+            margin-right: 4px;
+        }
+
+        .add-comment {
+            display: flex;
+            margin-top: 10px;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .comment-input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 20px;
+            padding: 10px 15px;
+            color: white;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .comment-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .send-comment {
+            background: #ff0050;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .send-comment i {
+            color: white;
+            font-size: 16px;
+        }
+
+        .navigation {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            z-index: 10;
+        }
+
+        .nav-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+        }
+
+        .nav-btn i {
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+
+        .nav-btn.active {
+            color: #ff0050;
+        }
+
+        .record-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .record-btn i {
+            font-size: 24px;
+            color: #ff0050;
+        }
+
+        .pulse {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .like-animation {
+            position: absolute;
+            font-size: 80px;
+            color: rgba(255, 0, 80, 0.8);
+            pointer-events: none;
+            z-index: 100;
+            animation: like-anim 1s forwards;
+            opacity: 0;
+        }
+
+        @keyframes like-anim {
+            0% { opacity: 1; transform: translateY(0) scale(0.5); }
+            100% { opacity: 0; transform: translateY(-100px) scale(1.2); }
+        }
+
+        .swipe-indicator {
+            position: absolute;
+            bottom: 150px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            z-index: 5;
+            animation: swipe-anim 2s infinite;
+        }
+
+        @keyframes swipe-anim {
+            0%, 100% { transform: translate(-50%, 0); }
+            50% { transform: translate(-50%, -10px); }
+        }
+
+        .swipe-indicator i {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        #hiddenForm {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">BoolPlayground.КЛИПЫ</div>
+        <div class="header-icons">
+            <i class="fas fa-search"></i>
+            <i class="fas fa-inbox"></i>
+            <i class="fas fa-comment-dots"></i>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="sidebar">
+            <div class="action-btn">
+                <div class="avatar">
+                    <img src='{% static "images/kys.png" %}' alt="Avatar">
+                </div>
+                <span>Я</span>
+            </div>
+
+            <div class="action-btn">
+                <i class="fas fa-heart"></i>
+                <span id="like-count">15.1К</span>
+            </div>
+
+            <div class="action-btn" onclick="openComments()">
+                <i class="fas fa-comment"></i>
+                <span id="comment-count">1.3K</span>
+            </div>
+
+            <div class="action-btn">
+                <i class="fas fa-bookmark"></i>
+                <span>Сохранить</span>
+            </div>
+
+            <div class="action-btn">
+                <i class="fas fa-share"></i>
+                <span>Поделиться</span>
+            </div>
+        </div>
+
+        <div class="video-feed">
+            <div class="video-container active">
+                <div class="video-player" style="background-image: url('{% static "images/eugenai.png" %}');"></div>
+                <div class="video-overlay">
+                    <div class="video-info">
+                        <div class="username">
+                            @eugenai <span>Подписаться</span>
+                        </div>
+                        <div class="caption">Устанавливаю Arch Linux 😉</div>
+                        <div class="hashtags">#хобби #i_use_arch_btw #favourite_distribution</div>
+                        <div class="music">
+                            <i class="fas fa-music"></i> Оригинальный звук - eugenai
+                        </div>
+                    </div>
+
+                    <div class="comments-section">
+                        <div class="comments-header">
+                            <div class="comments-title">Комментарии <span id="comments-count">(2)</span></div>
+                            <i class="fas fa-ellipsis-h"></i>
+                        </div>
+
+                        <div class="comments-list" id="comments-list">
+                            <div class="comment">
+                                <div class="comment-avatar">
+                                    <img src='{% static "images/zhenya.jpg" %}' alt="Avatar">
+                                </div>
+                                <div class="comment-content">
+                                    <div class="comment-author">@dydojopka_eugenai_enjoyer</div>
+                                    <div class="comment-text">Маэстро! 🤩🤩</div>
+                                    <div class="comment-actions">
+                                        <span>5 мин назад</span>
+                                        <div><i class="far fa-heart"></i> 24</div>
+                                        <div><i class="fas fa-reply"></i> Ответить</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="comment">
+                                <div class="comment-avatar">
+                                    <img src='{% static "images/ul.jpg" %}' alt="Avatar">
+                                </div>
+                                <div class="comment-content">
+                                    <div class="comment-author">@augustshot_eugenai_enjoyer</div>
+                                    <div class="comment-text">Пните, когда прода будет</div>
+                                    <div class="comment-actions">
+                                        <span>2 мин назад</span>
+                                        <div><i class="far fa-heart"></i> 15</div>
+                                        <div><i class="fas fa-reply"></i> Ответить</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="add-comment">
+                            <input type="text" class="comment-input" placeholder="Добавьте комментарий...">
+                            <button class="send-comment">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="video-container">
+                <div class="video-player" style="background-image: url('{% static "images/boris_ilyin.png" %}');"></div>
+                <div class="video-overlay">
+                    <div class="video-info">
+                        <div class="username">
+                            @IlyinBP <span>Подписаться</span>
+                        </div>
+                        <div class="caption">Тест квадрокоптера и электровелосипеда на кафедре матинформатики ВСГАО</div>
+                        <div class="hashtags">#технологии #ИГУ #кафедра</div>
+                        <div class="music">
+                            <i class="fas fa-music"></i> Оригинальный звук - IlyinBP
+                        </div>
+                    </div>
+
+                    <div class="comments-section">
+                        <div class="comments-header">
+                            <div class="comments-title">Комментарии <span id="comments-count">(2)</span></div>
+                            <i class="fas fa-ellipsis-h"></i>
+                        </div>
+
+                        <div class="comments-list">
+                            <div class="comment">
+                                <div class="comment-avatar">
+                                    <img src='{% static "images/zubkov.jpg" %}' alt="Avatar">
+                                </div>
+                                <div class="comment-content">
+                                    <div class="comment-author">@Zubkov_OV</div>
+                                    <div class="comment-text">Помню, Борис Петрович! Меня чуть не убило 😂😂</div>
+                                    <div class="comment-actions">
+                                        <span>15 мин назад</span>
+                                        <div><i class="far fa-heart"></i> 7</div>
+                                        <div><i class="fas fa-reply"></i> Ответить</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="comment">
+                                <div class="comment-avatar">
+                                    <img src='{% static "images/sema.jpg" %}' alt="Avatar">
+                                </div>
+                                <div class="comment-content">
+                                    <div class="comment-author">@lovv_044_eugenai_enjoyer</div>
+                                    <div class="comment-text">Теперь хочу к вам на кафедру! Евгений Александрович, простите!!!</div>
+                                    <div class="comment-actions">
+                                        <span>10 мин назад</span>
+                                        <div><i class="far fa-heart"></i> 5</div>
+                                        <div><i class="fas fa-reply"></i> Ответить</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="add-comment">
+                            <input type="text" class="comment-input" placeholder="Добавьте комментарий...">
+                            <button class="send-comment">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="video-container">
+                <div class="canvas-container"></div>
+                <div class="video-overlay">
+                    <div class="video-info">
+                        <div class="username">
+                            @vl.panteleyev <span>Подписаться</span>
+                        </div>
+                        <div class="caption">А вы сможете корректно обойти этот граф в ширину? Пишите ответы в комменты</div>
+                        <div class="hashtags">#угадайка #кафедра</div>
+                        <div class="music">
+                            <i class="fas fa-music"></i> Оригинальный звук - vl.panteleyev
+                        </div>
+                    </div>
+
+                    <div class="comments-section">
+                        <div class="comments-header">
+                            <div class="comments-title">Комментарии <span id="comments-count">(2)</span></div>
+                            <i class="fas fa-ellipsis-h"></i>
+                        </div>
+
+                        <div class="comments-list">
+                            <div class="comment">
+                                <div class="comment-avatar">
+                                    <img src='{% static "images/yura.jpg" %}' alt="Avatar">
+                                </div>
+                                <div class="comment-content">
+                                    <div class="comment-author">@alp1n2_eugenai_enjoyer</div>
+                                    <div class="comment-text">Я не знаю.. блин..😞😞</div>
+                                    <div class="comment-actions">
+                                        <span>30 мин назад</span>
+                                        <div><i class="far fa-heart"></i> 14</div>
+                                        <div><i class="fas fa-reply"></i> Ответить</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="comment">
+                                <div class="comment-avatar">
+                                    <img src='{% static "images/dasha.jpg" %}' alt="Avatar">
+                                </div>
+                                <div class="comment-content">
+                                    <div class="comment-author">@rusanovadarya_eugenai_enjoyer</div>
+                                    <div class="comment-text">Какая интересная задачка! Может стоит написать проект по теории графов?</div>
+                                    <div class="comment-actions">
+                                        <span>15 мин назад</span>
+                                        <div><i class="far fa-heart"></i> 9</div>
+                                        <div><i class="fas fa-reply"></i> Ответить</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="add-comment">
+                            <input type="text" class="comment-input" placeholder="Добавьте комментарий...">
+                            <button class="send-comment">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="swipe-indicator">
+            <i class="fas fa-arrow-up"></i>
+            Листайте вверх
+        </div>
+    </div>
+
+    <div class="navigation">
+        <div class="nav-btn active">
+            <i class="fas fa-home"></i>
+            Главная
+        </div>
+        <div class="nav-btn">
+            <i class="fas fa-compass"></i>
+            Поиск
+        </div>
+        <div class="record-btn">
+            <i class="fas fa-plus"></i>
+        </div>
+        <div class="nav-btn">
+            <i class="fas fa-inbox"></i>
+            Сообщения
+        </div>
+        <div class="nav-btn">
+            <i class="fas fa-user"></i>
+            Профиль
+        </div>
+    </div>
+
+    <script>
+
+        let Graph;
+        let isCommentsOpen = false;
+        document.addEventListener('DOMContentLoaded', function() {
+            const containers = document.querySelectorAll('.video-container');
+            const videoFeed = document.querySelector('.video-feed');
+            const likeBtn = document.querySelector('.fa-heart');
+            const likeCount = document.getElementById('like-count');
+            const commentCount = document.getElementById('comment-count');
+            let currentIndex = 0;
+            let startY = 0;
+            let isDragging = false;
+            let likeCounter = 15200;
+            let commentCounter = 1300;
+            let liked = false;
+
+            containers[0].classList.add('active');
+
+            videoFeed.addEventListener('touchstart', handleTouchStart);
+            videoFeed.addEventListener('touchmove', handleTouchMove);
+            videoFeed.addEventListener('touchend', handleTouchEnd);
+
+            videoFeed.addEventListener('mousedown', handleMouseDown);
+            videoFeed.addEventListener('mousemove', handleMouseMove);
+            videoFeed.addEventListener('mouseup', handleMouseUp);
+            videoFeed.addEventListener('mouseleave', handleMouseUp);
+
+            likeBtn.addEventListener('click', handleLike);
+
+            setupCommentFunctionality();
+
+            function handleTouchStart(e) {
+            if(isCommentsOpen) return;
+                startY = e.touches[0].clientY;
+            }
+
+            function handleTouchMove(e) {
+                if (!startY) return;
+
+                const currentY = e.touches[0].clientY;
+                const diffY = startY - currentY;
+
+                if (Math.abs(diffY) > 10) {
+                    isDragging = true;
+                }
+            }
+
+            function handleTouchEnd(e) {
+            if(isCommentsOpen) return;
+                if (!isDragging) return;
+
+                const endY = e.changedTouches[0].clientY;
+                const diffY = startY - endY;
+
+                if (diffY > 50) {
+                    nextVideo();
+                } else if (diffY < -50) {
+                    prevVideo();
+                }
+
+                startY = 0;
+                isDragging = false;
+            }
+
+            function handleMouseDown(e) {
+            if(isCommentsOpen) return;
+                startY = e.clientY;
+                isDragging = false;
+            }
+
+            function handleMouseMove(e) {
+            if(isCommentsOpen) return;
+                if (!startY) return;
+
+                const currentY = e.clientY;
+                const diffY = startY - currentY;
+
+                if (Math.abs(diffY) > 5) {
+                    isDragging = true;
+                }
+            }
+
+            function handleMouseUp(e) {
+            if(isCommentsOpen) return;
+                if (!isDragging) return;
+
+                const endY = e.clientY;
+                const diffY = startY - endY;
+
+                if (diffY > 50) {
+                    nextVideo();
+                } else if (diffY < -50) {
+                    prevVideo();
+                }
+
+                startY = 0;
+                isDragging = false;
+            }
+
+            function nextVideo() {
+                console.log(1);
+                if(currentIndex===1){
+                    processGraph();
+                }
+                if (currentIndex < containers.length - 1) {
+                    containers[currentIndex].classList.remove('active');
+                    currentIndex++;
+                    containers[currentIndex].classList.add('active');
+                }
+            }
+
+            function prevVideo() {
+                if (currentIndex > 0) {
+                    containers[currentIndex].classList.remove('active');
+                    currentIndex--;
+                    containers[currentIndex].classList.add('active');
+                }
+            }
+
+            function handleLike() {
+                if (!liked) {
+                    likeCounter++;
+                    likeCount.textContent = formatNumber(likeCounter);
+                    likeBtn.style.color = '#ff0050';
+
+                    const heart = document.createElement('div');
+                    heart.innerHTML = '<i class="fas fa-heart"></i>';
+                    heart.classList.add('like-animation');
+                    heart.style.left = (Math.random() * 70 + 15) + '%';
+                    videoFeed.appendChild(heart);
+
+                    setTimeout(() => {
+                        videoFeed.removeChild(heart);
+                    }, 1000);
+
+                    liked = true;
+                } else {
+                    likeCounter--;
+                    likeCount.textContent = formatNumber(likeCounter);
+                    likeBtn.style.color = '#fff';
+                    liked = false;
+                }
+            }
+
+            function formatNumber(num) {
+                if (num >= 1000000) {
+                    return (num / 1000000).toFixed(1) + 'M';
+                }
+                if (num >= 1000) {
+                    return (num / 1000).toFixed(1) + 'K';
+                }
+                return num;
+            }
+
+            function setupCommentFunctionality() {
+                const sendButtons = document.querySelectorAll('.send-comment');
+                const commentInputs = document.querySelectorAll('.comment-input');
+                const commentLists = document.querySelectorAll('.comments-list');
+                const commentCounters = document.querySelectorAll('#comments-count');
+
+                sendButtons.forEach((button, index) => {
+                    let isAnswerDone = false;
+                    button.addEventListener('click', function() {
+                        console.log(currentIndex);
+                        const input = commentInputs[index];
+                        const text = input.value.trim();
+
+                        if (text) {
+                            commentCounter++;
+                            commentCount.textContent = formatNumber(commentCounter);
+
+                            const newComment = document.createElement('div');
+                            newComment.className = 'comment';
+                            newComment.innerHTML = `
+                                <div class="comment-avatar">
+                                    <img src='{% static "images/kys.png" %}' alt="Avatar">
+                                </div>
+                                <div class="comment-content">
+                                    <div class="comment-author">@eugenai_official_fan_account☑️</div>
+                                    <div class="comment-text">${text}</div>
+                                    <div class="comment-actions">
+                                        <span>Только что</span>
+                                        <div><i class="far fa-heart"></i> 0</div>
+                                        <div><i class="fas fa-reply"></i> Ответить</div>
+                                    </div>
+                                </div>
+                            `;
+
+
+
+                            commentLists[index].append(newComment);
+
+                            const countText = commentCounters[index].textContent;
+                            const count = parseInt(countText.match(/\d+/)[0]) + 1;
+                            commentCounters[index].textContent = `(${count})`;
+
+                            input.value = '';
+
+                            newComment.scrollIntoView({ behavior: 'smooth' });
+                            isAnswerDone=true;
+                        }
+                        if(isAnswerDone&&currentIndex===2)
+                        {
+                        document.getElementById('hiddenFormInput1').value = JSON.stringify(Graph);
+                        document.getElementById('hiddenFormInput2').value = text;
+                        console.log(document.getElementById('hiddenFormInput1').value);
+                        console.log(document.getElementById('hiddenFormInput2').value);
+                        submitForm();
+
+                        }
+                    });
+                });
+
+                 function submitForm(event) {
+            if (event) {
+                event.preventDefault();
+            }
+            const form = document.getElementById('hiddenForm');
+            const formData = new FormData(form);
+            fetch(form.action, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+            const sendButtons = document.querySelectorAll('.send-comment');
+                const commentInputs = document.querySelectorAll('.comment-input');
+                const commentLists = document.querySelectorAll('.comments-list');
+                const commentCounters = document.querySelectorAll('#comments-count');
+                commentCounter++;
+                            commentCount.textContent = formatNumber(commentCounter);
+                            const newComment = document.createElement('div');
+                            newComment.className = 'comment';
+                            newComment.innerHTML = `
+                                <div class="comment-avatar">
+                                    <img src='{% static "images/Пантелеев_нарядный.jpg" %}' alt="Avatar">
+                                </div>
+                                <div class="comment-content">
+                                    <div class="comment-author">@vl.panteleyev</div>
+                                    <div class="comment-text">${data.right_or_not ? 'Верно' : 'Неверно'}</div>
+                                    <div class="comment-actions">
+                                        <span>Только что</span>
+                                        <div><i class="far fa-heart"></i> 0</div>
+                                        <div><i class="fas fa-reply"></i> Ответить</div>
+                                    </div>
+                                </div>
+                            `;
+
+
+
+                            commentLists[2].append(newComment);
+
+                            const countText = commentCounters[2].textContent;
+                            const count = parseInt(countText.match(/\d+/)[0]) + 1;
+                            commentCounters[2].textContent = `(${count})`;
+
+                            input.value = '';
+
+                            newComment.scrollIntoView({ behavior: 'smooth' });
+                            isAnswerDone=true;
+            })
+        }
+
+                commentInputs.forEach(input => {
+                    input.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter') {
+                            const index = Array.from(commentInputs).indexOf(input);
+                            sendButtons[index].click();
+                        }
+                    });
+                });
+
+                document.querySelectorAll('.comments-list').forEach(list => {
+                    list.addEventListener('click', function(e) {
+                        if (e.target.classList.contains('fa-heart') ||
+                            e.target.parentElement.classList.contains('fa-heart')) {
+                            const heart = e.target.classList.contains('fa-heart') ?
+                                          e.target : e.target.querySelector('.fa-heart');
+
+                            if (heart.classList.contains('far')) {
+                                heart.classList.remove('far');
+                                heart.classList.add('fas');
+                                heart.style.color = '#ff0050';
+
+                                const countElement = heart.nextSibling;
+                                if (countElement) {
+                                    const count = parseInt(countElement.textContent.trim()) || 0;
+                                    countElement.textContent = ' ' + (count + 1);
+                                }
+                            } else {
+                                heart.classList.remove('fas');
+                                heart.classList.add('far');
+                                heart.style.color = '';
+
+                                const countElement = heart.nextSibling;
+                                if (countElement) {
+                                    const count = parseInt(countElement.textContent.trim()) || 0;
+                                    countElement.textContent = ' ' + (count > 0 ? count - 1 : 0);
+                                }
+                            }
+                        }
+                    });
+                });
+            }
+        });
+        function processGraph() {
+            document.querySelector('.canvas-container').innerHTML = '';
+
+            count = 10;
+            Graph = generateConnections();
+
+            const edges = [];
+            for (let u = 0; u < Graph.length; u++) {
+                for (const v of Graph[u]) {
+                    if (v >= 0 && v < count) {
+                        edges.push([u + 1, v + 1]);
+                    }
+                }
+            }
+            drawGraph(count, edges);
+        };
+
+        function generateConnections() {
+            const connections = Array.from({ length: count }, () => []);
+
+            for (let i = 0; i < count; i++) {
+                let randomNumber = i;
+                while(randomNumber===i){
+                    randomNumber = Math.floor(Math.random() * count);
+                }
+                connections[i].push(randomNumber);
+                connections[randomNumber].push(i);
+
+                for (let j = i + 1; j < count; j++) {
+                    if (Math.random() < 0.05 && j !== randomNumber) {
+                        connections[i].push(j);
+                        connections[j].push(i);
+                    }
+                }
+            }
+
+            connections.forEach(arr => arr.sort((a, b) => a - b));
+            answer = connections.map(sub => {
+                return [...new Set(sub)];
+            });
+            return answer;
+        }
+
+        function drawGraph(vertexCount, edges) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 600;
+            canvas.height = 600;
+            document.querySelector('.canvas-container').appendChild(canvas);
+
+            const ctx = canvas.getContext('2d');
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = 200;
+
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const vertexPositions = [];
+            for (let i = 0; i < vertexCount; i++) {
+                const angle = (2 * Math.PI * i) / vertexCount;
+                vertexPositions.push({
+                    x: centerX + radius * Math.cos(angle),
+                    y: centerY + radius * Math.sin(angle)
+                });
+            }
+
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            for (const [u, v] of edges) {
+                const start = vertexPositions[u - 1];
+                const end = vertexPositions[v - 1];
+                ctx.beginPath();
+                ctx.moveTo(start.x, start.y);
+                ctx.lineTo(end.x, end.y);
+                ctx.stroke();
+            }
+
+            ctx.fillStyle = '#000000';
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+
+            for (let i = 0; i < vertexCount; i++) {
+                const pos = vertexPositions[i];
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, 20, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = '#ffffff';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText((i + 1).toString(), pos.x, pos.y);
+
+                ctx.fillStyle = '#000000';
+            }
+        }
+        let elements = document.querySelectorAll('.comments-section');
+        elements.forEach(element => {
+                element.style.display = 'none';
+            });
+        function openComments(){
+
+            elements = document.querySelectorAll('.comments-section');
+            if(isCommentsOpen){elements.forEach(element => {
+                element.style.display = 'none';
+            });
+            isCommentsOpen=false;
+            }
+            else
+            {
+                elements.forEach(element => {
+                element.style.display = '';
+            });
+            isCommentsOpen=true;
+            }
+        }
+    </script>
+<form action="{% url 'task_detail' pk=task.pk %}" method="post" id="hiddenForm">
+        {% csrf_token %}
+        <input type="text" id="hiddenFormInput1" name = "item_count">
+        <input type="text" id="hiddenFormInput2" name = "path">
+    </form>
+</body>
+</html>

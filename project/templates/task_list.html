@@ -1,0 +1,86 @@
+{% include 'flatpages/default.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Задания</title>
+    {% load static %}
+    <link href="{% static 'css/task_list.css' %}" rel="stylesheet" />
+</head>
+<body>
+    <div class="container">
+        <h3>ЗАДАНИЯ</h3>
+        <hr>
+        {% if Tasks %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Автор задачи</th>
+                    <th>Название</th>
+                    <th>Описание</th>
+                    <th>Уровень</th>
+                    <th>Действие</th>
+
+                        <th>Комментарии</th>
+
+                </tr>
+            </thead>
+            <tbody>
+                {% for task in Tasks %}
+                <tr>
+                    <td>{{ task.author.user.username }}</td>
+                    <td>{{ task.title }}</td>
+                    <td>{{ task.description }}</td>
+                    <td>{{ task.level }}</td>
+                    <td>
+                        <a class="button" href="{{ task.get_absolute_url }}">Решить</a>
+                    </td>
+
+                    <td>
+                        <a class="button" href="{% url 'comment_list' pk=task.pk %}">Обсуждение</a>
+                    </td>
+
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <h2 style="text-align: center; color: #c0392b;">Заданий нет!</h2>
+        {% endif %}
+
+        <!-- Пагинация -->
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+            <a href="?page=1"><button>1</button></a>
+            {% if page_obj.previous_page_number != 1 %}
+            ...
+            <a href="?page={{ page_obj.previous_page_number }}"><button>{{ page_obj.previous_page_number }}</button></a>
+            {% endif %}
+            {% endif %}
+            <button class="current-page">{{ page_obj.number }}</button>
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}"><button>{{ page_obj.next_page_number }}</button></a>
+            {% if paginator.num_pages != page_obj.next_page_number %}
+            ...
+            <a href="?page={{ page_obj.paginator.num_pages }}"><button>{{ page_obj.paginator.num_pages }}</button></a>
+            {% endif %}
+            {% endif %}
+        </div>
+
+        <!-- Информация о пользователе -->
+        <div class="user-info">
+            {% if user.is_authenticated %}
+            {% if user.is_superuser %}
+            <h3>Администратор сервера {{ user.username }}</h3>
+            {% else %}
+            <h3>Пользователь {{ user.username }}</h3>
+            {% endif %}
+            {% else %}
+            <h4 style="color: #c0392b;">Вы не вошли в систему</h4>
+            {% endif %}
+
+        </div>
+    </div>
+</body>
+</html>

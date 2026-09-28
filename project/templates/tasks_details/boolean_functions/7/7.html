@@ -1,0 +1,401 @@
+{% include 'template_title.html' %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>task7TEST</title>
+    {% load static %}
+    <link href="{% static 'images/tasks/7/link_style.css' %}" rel="stylesheet">
+    <style>
+        body {
+            background: #e1d5c2 url('{% static "images/tasks/7/fon.svg" %}');
+            padding: 40px 20px;
+            min-height: 100vh;
+
+        }
+        .notebook {
+            position: relative;
+            width: 400px;
+            min-height: 500px;
+            background: repeating-linear-gradient(
+                #fff,
+                #fff 29px,
+                #80b3e6 30px
+            );
+            padding: 40px 30px 30px 50px;
+            border-left: 20px solid #6a93d4;
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.2);
+            font-family: 'Patrick Hand', cursive;
+        }
+        .notebook:before {
+            content: "";
+            position: absolute;
+            left: -20px;
+            top: 0;
+            height: 100%;
+            width: 20px;
+            background: repeating-linear-gradient(
+                180deg,
+                #6a93d4,
+                #6a93d4 15px,
+                transparent 15px,
+                transparent 30px
+            );
+        }
+        .binary-number {
+            font-size: 28px;
+            margin-bottom: 25px;
+            font-family: 'Schoolbell', cursive;
+            color: #2a2a2a;
+        }
+        .input-field {
+            width: 100%;
+            font-size: 22px;
+            padding: 5px 10px;
+            border: none;
+            border-bottom: 2px dashed #666;
+            background: transparent;
+            font-family: 'Patrick Hand', cursive;
+            margin: 15px 0;
+            outline: none;
+            min-height: 30px;
+            line-height: 1.5;
+        }
+        .input-field:focus {
+            border-color: #e74c3c;
+        }
+        .buttons {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .buttons button {
+            font-size: 20px;
+            padding: 8px 15px;
+            border: none;
+            background: #f0f0f0;
+            border-radius: 15px;
+            cursor: pointer;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+            font-family: 'Patrick Hand', cursive;
+        }
+        .buttons button:hover {
+            background: #e74c3c;
+            color: white;
+            transform: translateY(-2px);
+        }
+        .buttons button:hover .overline::before {
+            border-top-color: white;
+        }
+        .result {
+            margin-top: 25px;
+            font-size: 22px;
+            color: #e74c3c;
+            border-left: 3px solid #e74c3c;
+            padding-left: 15px;
+        }
+        .coil {
+            position: absolute;
+            left: -30px;
+            top: 0;
+            height: 100%;
+            width: 20px;
+            background: repeating-radial-gradient(
+                circle at 10px 50%,
+                #6a93d4,
+                #6a93d4 5px,
+                transparent 5px,
+                transparent 10px
+            );
+        }
+        .red-line {
+            position: absolute;
+            left: 50px;
+            right: 30px;
+            border-top: 1px solid #ffcccc;
+            margin-top: -10px;
+        }
+        .home-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    background: #f5f0e1;
+    background-image:
+        linear-gradient(rgba(175, 131, 87, 0.2) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(175, 131, 87, 0.2) 1px, transparent 1px);
+    background-size: 15px 15px;
+    border-radius: 50%;
+    border: 2px solid #af8357;
+    box-shadow:
+        0 8px 20px rgba(0,0,0,0.15),
+        0 0 2px rgba(0,0,0,0.1) inset,
+        0 -2px 2px rgba(0,0,0,0.1) inset;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s ease;
+    transform: rotate(3deg);
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.home-button::before {
+    content: '';
+    position: absolute;
+    width: 110%;
+    height: 110%;
+    background: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 5px,
+        rgba(175, 131, 87, 0.1) 5px,
+        rgba(175, 131, 87, 0.1) 10px
+    );
+}
+
+.home-button img {
+    width: 24px;
+    height: 24px;
+    filter: sepia(100%) brightness(40%);
+    position: relative;
+    transition: transform 0.3s ease;
+}
+
+.home-button:hover {
+    transform: rotate(0deg) scale(1.15) translateY(-3px);
+    box-shadow:
+        0 12px 25px rgba(0,0,0,0.25),
+        0 0 3px rgba(0,0,0,0.2) inset,
+        0 -3px 3px rgba(0,0,0,0.15) inset;
+}
+
+.home-button:hover img {
+    transform: scale(1.2);
+}
+
+.home-button::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border: 1px solid rgba(175, 131, 87, 0.3);
+    border-radius: 50%;
+    pointer-events: none;
+}
+        .overline {
+            text-decoration: none;
+            position: relative;
+            display: inline-block;
+        }
+        .overline::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 7px;
+            width: 100%;
+            border-top: 2px solid black;
+        }
+        #hiddenForm{
+            display: none;
+        }
+  .floating-image-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+.floating-image {
+    width: 400px;
+    height: 400px;
+    object-fit: contain;
+    position: absolute;
+    opacity: 0;
+    transform: translateY(100vh) scale(0.9);
+    transition:
+        transform 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.1),
+        opacity 1.2s ease-out;
+}
+
+.floating-image.active {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+.floating-image.fade-out {
+    opacity: 0;
+    transform: translateY(-100vh) scale(0.8);
+}
+        #checkButton:disabled {
+    background-color: #ff9999;
+    color: #ffffffcc;
+    cursor: not-allowed;
+    opacity: 0.7;
+    box-shadow: none;
+}
+
+#checkButton:not(:disabled) {
+    transition: background-color 0.3s, opacity 0.3s;
+}
+    </style>
+</head>
+<body>
+    <div class="notebook">
+        <div class="coil"></div>
+        <div class="red-line"></div>
+        <div class="binary-number" id="binaryNumber"></div>
+        <div class="input-field" id="inputField" contenteditable="true" onkeydown="return false;" id="input"></div>
+        <div class="buttons">
+            <button onclick="insertSymbol('(')">(</button>
+            <button onclick="insertSymbol(')')">)</button>
+            <button onclick="insertSymbol(' & ')">&</button>
+            <button onclick="insertSymbol(' | ')">|</button>
+            <button onclick="insertSymbol('x<sub>1</sub>', 'group')">x<sub>1</sub></button>
+            <button onclick="insertSymbol('x<sub>2</sub>', 'group')">x<sub>2</sub></button>
+            <button onclick="insertSymbol('x<sub>3</sub>', 'group')">x<sub>3</sub></button>
+            <button onclick='insertSymbol("<span class=\"overline\">x</span><sub>1</sub>", "group")'><span class="overline">x</span><sub>1</sub></button>
+            <button onclick='insertSymbol("<span class=\"overline\">x</span><sub>2</sub>", "group")'><span class="overline">x</span><sub>2</sub></button>
+            <button onclick='insertSymbol("<span class=\"overline\">x</span><sub>3</sub>", "group")'><span class="overline">x</span><sub>3</sub></button>
+            <button onclick="deleteLastSymbol()" style="background: #e74c3c; color: white;">del</button>
+            <button onclick="checkResult()" style="background: #6a93d4; color: white;" id="checkButton">✓ Проверить</button>
+        </div>
+        <div class="result" id="result">Результат: </div>
+    </div>
+
+    <a href="/" class="home-button">
+        <img src="https://cdn-icons-png.flaticon.com/512/25/25694.png" alt="Home">
+    </a>
+    <div class="floating-image-container">
+    <img src="{% static 'images/img_1.png' %}" alt="Умочка" id="happy-image" class="floating-image">
+    <img src="{% static 'images/img.png' %}" alt="АХАХАХАХ" id="laugh-image" class="floating-image">
+</div>
+
+    <script>
+        const checkButton = document.getElementById('checkButton');
+        const resultText = document.getElementById("result");
+    const happyImage = document.getElementById("happy-image");
+    const laughImage = document.getElementById("laugh-image");
+
+    happyImage.classList.remove('active', 'fade-out');
+    laughImage.classList.remove('active', 'fade-out');
+       let elementsStack = [];
+
+function generateBinaryNumber() {
+    let num = Math.floor(Math.random() * 256);
+    document.getElementById("binaryNumber").textContent = num.toString(2).padStart(8, '0');
+}
+
+function insertSymbol(symbol, type) {
+    const input = document.getElementById("inputField");
+    const wrapper = document.createElement('span');
+    wrapper.innerHTML = symbol;
+
+    if (type === 'group') {
+        elementsStack.push(wrapper);
+        input.appendChild(wrapper);
+    } else {
+        const textNode = document.createTextNode(symbol);
+        elementsStack.push(textNode);
+        input.appendChild(textNode);
+    }
+}
+
+function deleteLastSymbol() {
+    const input = document.getElementById("inputField");
+    if (elementsStack.length > 0) {
+        const lastElement = elementsStack.pop();
+        input.removeChild(lastElement);
+    }
+}
+
+function checkResult() {
+    const input = document.getElementById("inputField");
+    let expression = input.innerHTML;
+    expression = expression.replace(/<span class="overline">x<\/span><sub>(\d)<\/sub>/g, '~x$1').replace(/x<sub>(\d)<\/sub>/g, 'x$1');
+    expression = expression.replace(/<\/?[^>]+(>|$)/g, '');
+    expression = expression.replace(/amp;/g, '');
+    expression = expression.replace(/ /g, '');
+    document.getElementById('hiddenFormInput1').value = expression;
+    document.getElementById("function_hidden").value = document.getElementById("binaryNumber").textContent;
+    console.log(document.getElementById('hiddenFormInput1').value);
+    console.log(document.getElementById('function_hidden').value);
+    submitForm();
+}
+
+function submitForm(event) {
+            if (event) {
+                event.preventDefault();
+            }
+            const form = document.getElementById('hiddenForm');
+            const formData = new FormData(form);
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                res = data.res;
+                if (res) {
+        resultText.textContent = "Результат: Умочка, верно!";
+        checkButton.disabled = true;
+        setTimeout(() => {
+            happyImage.classList.add('active');
+
+            setTimeout(() => {
+                happyImage.classList.add('fade-out');
+
+                setTimeout(() => {
+                    happyImage.classList.remove('active', 'fade-out');
+                    resultText.textContent = "Результат:";
+        checkButton.disabled = false;
+                }, 1000);
+            }, 1500);
+        }, 100);
+        generateBinaryNumber();
+    } else {
+        resultText.textContent = "Результат: АХАХАХАХАХАХ!!! ПОПРОБУЙ ЕЩЕ";
+        checkButton.disabled = true;
+        setTimeout(() => {
+            laughImage.classList.add('active');
+
+            setTimeout(() => {
+                laughImage.classList.add('fade-out');
+
+                setTimeout(() => {
+                    laughImage.classList.remove('active', 'fade-out');
+                     resultText.textContent = "Результат:";
+        checkButton.disabled = false;
+                }, 1000);
+            }, 1500);
+        }, 100);
+
+    }
+            });
+
+        }
+
+window.onload = generateBinaryNumber;
+    </script>
+</body>
+</html>
+
+<form action="{% url 'task_detail' pk=task.pk %}" method="post" id="hiddenForm">
+    {% csrf_token %}
+    <input type="text" id="hiddenFormInput1" name = "knf_or_not">
+    <input type="text" id="function_hidden" name = "function">
+</form>
+

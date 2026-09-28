@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Алгоритм Флойда-Уоршелла</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        input, button {
+            padding: 8px 12px;
+            font-size: 16px;
+        }
+        button {
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .matrix-container {
+            margin-top: 20px;
+            overflow-x: auto;
+        }
+        table {
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+            min-width: 40px;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .current {
+            background-color: #ffeb3b;
+        }
+        .updated {
+            background-color: #a5d6a7;
+            transition: background-color 0.5s;
+        }
+        .infinity {
+            color: #999;
+        }
+        .info {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f8f8f8;
+            border-radius: 4px;
+        }
+        .controls-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Визуализация алгоритма Флойда-Уоршелла</h1>
+
+    <div class="controls">
+        <label for="vertexCount">Количество вершин:</label>
+        <input type="number" id="vertexCount" min="2" max="10" value="5">
+        <button id="buildMatrix">Построить матрицу смежности</button>
+        <button id="findPaths">Запустить алгоритм Флойда-Уоршелла</button>
+    </div>
+
+    <div class="controls-row">
+        <div class="speed-control">
+            <label for="speed">Скорость анимации:</label>
+            <input type="range" id="speed" min="100" max="2000" value="500" step="100">
+            <span id="speedValue">500 мс</span>
+        </div>
+        <button id="pauseResume" disabled>Пауза</button>
+        <button id="stepForward" disabled>Шаг вперед</button>
+    </div>
+
+    <div class="matrix-container">
+        <h3>Матрица смежности:</h3>
+        <div id="matrix"></div>
+    </div>
+
+    <div class="info" id="info">
+        <p>1. Введите количество вершин (от 2 до 10)</p>
+        <p>2. Нажмите "Построить матрицу смежности" для создания случайного связного взвешенного графа</p>
+        <p>3. Нажмите "Запустить алгоритм Флойда-Уоршелла" для визуализации поиска кратчайших путей</p>
+    </div>
+
+    <script>
+        const vertexCountInput = document.getElementById('vertexCount');
+        const buildMatrixBtn = document.getElementById('buildMatrix');
+        const findPathsBtn = document.getElementById('findPaths');
+        const pauseResumeBtn = document.getElementById('pauseResume');
+        const stepForwardBtn = document.getElementById('stepForward');
+        const speedSlider = document.getElementById('speed');
+        const speedValue = document.getElementById('speedValue');
+        const matrixDiv = document.getElementById('matrix');
+        const infoDiv = document.getElementById('info');
+
+        let matrix = [];
+        let distanceMatrix = [];
+        let animation = null;
+        let isPaused = false;
+        let animationSpeed = 500;
+        let floydState = null;
+
+        // Инициализация
+        init();
+
+        function init() {
+            buildMatrixBtn.addEventListener('click', buildMatrix);
+            findPathsBtn.addEventListener('click', startFloydWarshall);
+            pauseResumeBtn.addEventListener('click', togglePause);
+            stepForwardBtn.addEventListener('click', stepForward);
+            speedSlider.addEventListener('input', updateSpeed);
+
+            updateSpeed();
+        }
+
+        function updateSpeed() {
+            animationSpeed = parseInt(speedSlider.value);
+            speedValue.textContent = `${animationSpeed} мс`;
+
+            if (animation) {
+                clearInterval(animation);
+                if (!isPaused) {
+                    animation = setInterval(floydStep, animationSpeed);
+                }
+            }
+        }
+
+        function buildMatrix() {
+            // Остановить текущую анимацию, если есть
+            if (animation) {
+                clearInterval(animation);
+                animation = null;
+            }
+
+            const vertexCount = parseInt(vertexCountInput.value);
+            if (vertexCount < 2 || vertexCount > 10) {
+                alert('Количество вершин должно быть от 2 до 10');
+                return;
+            }
+
+            // Сброс состояния
+            resetControls();
+
+            // Создание случайного связного графа (матрица смежности)
+            matrix = Array(vertexCount).fill().map(() => Array(vertexCount).fill(0));
+
+            // 1. Сначала создаем остовное дерево, чтобы граф был связным
+            for (let i = 1; i < vertexCount; i++) {
+                const j = Math.floor(Math.random() * i);
+                const weight = Math.floor(Math.random() * 9) + 1; // Вес от 1 до 9
+                matrix[i][j] = weight;
+                matrix[j][i] = weight;
+            }
+
+            // 2. Добавляем дополнительные ребра
+            const extraEdges = Math.floor(vertexCount * 1.5);
+            for (let e = 0; e < extraEdges; e++) {
+                const i = Math.floor(Math.random() * vertexCount);
+                const j = Math.floor(Math.random() * vertexCount);
+                if (i !== j && matrix[i][j] === 0) {
+                    const weight = Math.floor(Math.random() * 9) + 1;
+                    matrix[i][j] = weight;
+                    matrix[j][i] = weight;
+                }
+            }
+
+            // 3. Заменяем нули на бесконечности (кроме диагонали)
+            distanceMatrix = matrix.map((row, i) =>
+                row.map((val, j) =>
+                    i === j ? 0 : (val === 0 ? Infinity : val)
+                )
+            );
+
+            displayMatrix(matrix, "Матрица смежности:");
+            infoDiv.innerHTML = '<p>Матрица смежности построена. Нажмите "Запустить алгоритм Флойда-Уоршелла" для визуализации.</p>';
+        }
+
+        function startFloydWarshall() {
+            if (matrix.length === 0) {
+                alert('Сначала постройте матрицу смежности');
+                return;
+            }
+
+            resetControls();
+
+            // Инициализация состояния алгоритма
+            floydState = {
+                k: 0,
+                i: 0,
+                j: 0,
+                matrix: distanceMatrix.map(row => [...row])
+            };
+
+            // Активируем кнопки управления
+            pauseResumeBtn.disabled = false;
+            stepForwardBtn.disabled = false;
+            findPathsBtn.disabled = true;
+
+            // Запускаем анимацию
+            isPaused = false;
+            pauseResumeBtn.textContent = 'Пауза';
+            animation = setInterval(floydStep, animationSpeed);
+
+            infoDiv.innerHTML = '<p>Алгоритм запущен. k = 0 (прямые соединения)</p>';
+        }
+
+        function floydStep() {
+            if (!floydState) return;
+
+            const {k, i, j, matrix} = floydState;
+            const n = matrix.length;
+
+            // Отображаем текущее состояние
+            displayFloydMatrix(matrix, k, i, j);
+
+            // Проверяем, нужно ли обновить текущее значение
+            if (i !== k && j !== k && i !== j) {
+                const newDistance = matrix[i][k] + matrix[k][j];
+                if (newDistance < matrix[i][j]) {
+                    matrix[i][j] = newDistance;
+                    displayFloydMatrix(matrix, k, i, j, true);
+                    infoDiv.innerHTML = `<p>Обновление: d[${i}][${j}] = min(d[${i}][${j}]=${matrix[i][j]-newDistance}, d[${i}][${k}]=${matrix[i][k]} + d[${k}][${j}]=${matrix[k][j]}) = ${newDistance}</p>`;
+                    return; // Даем время увидеть обновление
+                }
+            }
+
+            // Переходим к следующей ячейке
+            floydState.j++;
+            if (floydState.j >= n) {
+                floydState.j = 0;
+                floydState.i++;
+                if (floydState.i >= n) {
+                    floydState.i = 0;
+                    floydState.k++;
+                    if (floydState.k >= n) {
+                        // Алгоритм завершен
+                        clearInterval(animation);
+                        animation = null;
+                        pauseResumeBtn.disabled = true;
+                        stepForwardBtn.disabled = true;
+                        infoDiv.innerHTML = '<p>Алгоритм завершен. Матрица кратчайших расстояний:</p>';
+                        displayMatrix(matrix, "Матрица кратчайших расстояний:");
+                        return;
+                    }
+                    infoDiv.innerHTML = `<p>Переход к k = ${floydState.k} (промежуточная вершина ${floydState.k})</p>`;
+                }
+            }
+        }
+
+        function stepForward() {
+            if (isPaused && floydState) {
+                floydStep();
+            }
+        }
+
+        function togglePause() {
+            if (!animation) return;
+
+            isPaused = !isPaused;
+            pauseResumeBtn.textContent = isPaused ? 'Продолжить' : 'Пауза';
+
+            if (isPaused) {
+                clearInterval(animation);
+            } else {
+                animation = setInterval(floydStep, animationSpeed);
+            }
+        }
+
+        function resetControls() {
+            if (animation) {
+                clearInterval(animation);
+                animation = null;
+            }
+            isPaused = false;
+            pauseResumeBtn.disabled = true;
+            stepForwardBtn.disabled = true;
+            findPathsBtn.disabled = false;
+            pauseResumeBtn.textContent = 'Пауза';
+        }
+
+        function displayMatrix(matrix, title) {
+            let html = `<table><caption>${title}</caption><tr><th></th>`;
+
+            // Заголовки столбцов
+            for (let i = 0; i < matrix.length; i++) {
+                html += `<th>${i}</th>`;
+            }
+            html += '</tr>';
+
+            // Строки матрицы
+            for (let i = 0; i < matrix.length; i++) {
+                html += `<tr><th>${i}</th>`;
+                for (let j = 0; j < matrix[i].length; j++) {
+                    const value = matrix[i][j] === Infinity ? '∞' : matrix[i][j];
+                    const cls = matrix[i][j] === Infinity ? 'infinity' : '';
+                    html += `<td class="${cls}">${value}</td>`;
+                }
+                html += '</tr>';
+            }
+
+            html += '</table>';
+            matrixDiv.innerHTML = html;
+        }
+
+        function displayFloydMatrix(matrix, k, i, j, updated = false) {
+            let html = `<table><caption>Шаг алгоритма (k=${k})</caption><tr><th></th>`;
+
+            // Заголовки столбцов
+            for (let col = 0; col < matrix.length; col++) {
+                html += `<th>${col}</th>`;
+            }
+            html += '</tr>';
+
+            // Строки матрицы
+            for (let row = 0; row < matrix.length; row++) {
+                html += `<tr><th>${row}</th>`;
+                for (let col = 0; col < matrix[row].length; col++) {
+                    const value = matrix[row][col] === Infinity ? '∞' : matrix[row][col];
+                    const isInfinity = matrix[row][col] === Infinity;
+
+                    let cls = isInfinity ? 'infinity' : '';
+
+                    if (row === i && col === j) {
+                        cls += ' current';
+                    }
+                    if (updated && row === i && col === j) {
+                        cls += ' updated';
+                    }
+
+                    html += `<td class="${cls.trim()}">${value}</td>`;
+                }
+                html += '</tr>';
+            }
+
+            html += '</table>';
+            matrixDiv.innerHTML = html;
+        }
+    </script>
+</body>
+</html>

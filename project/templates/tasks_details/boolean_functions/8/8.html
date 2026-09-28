@@ -1,0 +1,186 @@
+{% include 'template_title.html' %}
+<html><head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        #authorization {
+  position: absolute;
+  border: 1px solid black;
+  width: 143px;
+  left: 8px;
+  padding: 4px;
+}
+#content {
+  position: absolute;
+  width: 831px;
+  left: 160px;
+  border: 1px solid black;
+  padding: 4px;
+}
+a.done {
+  color: green;
+}
+.learning-level-top-border {
+  border: 1px solid black;
+  font-size: 6px;
+  display: block;
+}
+.learning-level-bottom-border {
+  border-bottom: 1px solid black;
+  border-left: 1px solid black;
+  border-right: 1px solid black;
+  font-size: 6px;
+  display: block;
+}
+.learning-level-student {
+  background-color: green;
+}
+.learning-level-min-max {
+  border-top: 1px solid black;
+  background-color: aqua;
+}
+.learning-level-average {
+  background-color: blue;
+}
+.study-entity-type-label {
+  font-size: xx-small;
+}
+.student-comment {
+  background-color: pink;
+}
+.instructor-comment {
+  background-color: lightblue;
+}
+#hiddenForm{
+            display: none;
+        }
+.overline {
+            text-decoration: none;
+            position: relative;
+            display: inline-block;
+        }
+        .overline::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0px;
+            width: 100%;
+            border-top: 1px solid black;
+        }
+    </style>
+    <script>
+        function checkLogin() {
+            var login = document.getElementById("login").value;
+            var password = document.getElementById("password").value;
+            if (login === "demo" && password === "demo") {
+                const select_element = document.querySelector("select[name='idLoginAs']");
+                if (select_element.value == "2"){
+                  const form = document.getElementById('hiddenFormAchiev');
+                  const formData = new FormData(form);
+                  fetch(form.action,{
+                    method: 'POST',
+                    body: formData,
+                    headers : {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                    }
+                  })
+                  .then(response =>response.json())
+
+                }
+                document.getElementById("function-input").style.display = "block";
+            } else {
+                alert("Неверные данные!");
+            }
+        }
+    </script>
+</head>
+<body>
+    <h2>DOMIC — Информационно-образовательная среда</h2>
+    <div id="authorization">
+        <b>Авторизация</b><br>
+        <p><small>Для решения задачи используйте логин 'demo' с паролем 'demo'.</small></p>
+        <p>Логин:<br><input type="text" id="login" value=""></p>
+        <p>Пароль:<br><input type="password" id="password" value=""></p>
+        <p>Войти как:<br>
+            <select name="idLoginAs">
+                <option value="1">студент</option>
+                <option value="2">инструктор</option>
+            </select>
+        </p>
+        <p><input type="button" value="Вход" onclick="checkLogin()"></p>
+        <p><small>Для работы в авторизованном режиме Вам необходимо включить поддержку cookie.</small></p>
+        <p><a href="/">На главную</a></p>
+    </div>
+    <div id="content">
+        <h3>Добро пожаловать!</h3>
+        <div style="background-color:#e6acbb;font-family:sans-serif; padding:10px; margin:15px;">
+            <p><strong>Начиная с 03.05.2024 доступ будет предоставляться только избранным.</strong></p>
+            Решать эту задачу смогут только следующие преподаватели кафедры алгебраических и информационных систем:
+            <ul>
+                <li>Зинченко А.С.</li>
+                <li>Ильин Б.П.</li>
+                <li>Кириченко К.Д.</li>
+                <li>Колпакиди Н.Л.</li>
+                <li>Попова В.А.</li>
+                <li>Рябец Л.В.</li>
+            </ul>
+        </div>
+        <div id="function-input" style="display: none;">
+            <p>Введите вектор функции:</p>
+            <input type="text" id="vector-input">
+            <button onclick="getResult()">построить</button>
+            <p>СДНФ:</p>
+            <div id="sdnf-output" style="background-color: #f0f0f0; padding: 5px;"></div>
+        </div>
+    </div>
+    <script>
+        document.getElementById('function-input').addEventListener('input', function(event) {
+    validateBinaryInput(event.target);
+});
+
+
+
+function validateBinaryInput(input) {
+    let value = input.value.replace(/[^01]/g, '');
+    value = value.replace(/(.{4})/g, '$1 ').trim();
+    input.value = value;
+}
+function getResult(){
+    document.getElementById('hiddenFormInput1').value = document.getElementById('vector-input').value.replace(/ /g, '');
+    console.log(document.getElementById('hiddenFormInput1').value);
+    submitForm();
+}
+function submitForm(event) {
+            if (event) {
+                event.preventDefault();
+            }
+            const form = document.getElementById('hiddenForm');
+            const formData = new FormData(form);
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers : {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('sdnf-output').innerHTML = data.res.replace(/&/g, '⋅').replace(/\|/g, " ∨ ").replace(/~x(\d+)/g, '<span class="overline">x$1</span>').replace(/(?<!~)x(\d+)/g, 'x<sub>$1</sub>');
+
+            })
+        }
+    </script>
+</body>
+</html>
+
+<form action="{% url 'task_detail' pk=task.pk %}" method="post" id="hiddenForm">
+    {% csrf_token %}
+    <input type="text" id="hiddenFormInput1" name = "vector">
+    <input type="text" id="student_or_teacher" name = "student_or_teacher">
+</form>
+
+
+<form action="{% url 'task_detail' pk=task.pk %}" method="post" id="hiddenFormAchiev">
+    {% csrf_token %}
+    <input type="text" name = "IsAchiev" value = "true">
+</form>

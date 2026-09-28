@@ -1,0 +1,29 @@
+{% extends "account/base_entrance.html" %}
+{% load i18n %}
+{% load allauth %}
+{% load static %}
+
+{% block head_title %}
+    {% trans "Verify Your Email Address" %}
+{% endblock head_title %}
+
+{% block content %}
+<div class="vs-container">
+    <h1 class="vs-title">{% trans "Verify Your Email Address" %}</h1>
+    <div class="vs-text">
+        <p>
+            {% trans "We have sent an email to you for verification. Follow the link provided to finalize the signup process" %}
+        </p>
+
+        <p>
+            {% trans "If you do not see the verification email in your main inbox, check your spam folder." %}
+        </p>
+
+        <p>
+            {% trans "Please contact us if you do not receive the verification email within a few minutes." %}
+        </p>
+    </div>
+</div>
+
+<link href="{% static 'css/verification_sent.css' %}" rel="stylesheet">
+{% endblock content %}

@@ -1,0 +1,266 @@
+{% include 'template_title.html' %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>test3</title>
+    <style>
+        {% load static %}
+        /* шрифт скачать */
+        @import url('{% static "images/tasks/3/font.css" %}');
+        html{
+            cursor: url('{% static "images/tasks/3/sym761.ani" %}'), url('{% static "images/tasks/3/sym761.png" %}'), auto !important;
+        }
+        /* картинку скачать */
+        body {
+            background: url('{% static "images/tasks/3/image.jpeg" %}') no-repeat center center fixed;
+            background-size: cover;
+            color: #fff;
+            font-family: 'Press Start 2P', cursive;
+            text-align: center;
+            padding: 50px;
+
+        }
+        .container {
+            max-width: 400px;
+            margin: auto;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px #ff00ff;
+            animation: neonGlow 1.5s infinite alternate;
+        }
+        @keyframes neonGlow {
+            from {
+                box-shadow: 0 0 10px #ff00ff;
+            }
+            to {
+                box-shadow: 0 0 20px #ff00ff;
+            }
+        }
+        input, button {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            font-family: 'Press Start 2P', cursive;
+        }
+        input {
+            background: #333;
+            color: #ff00ff;
+            border: 2px solid #ff00ff;
+            box-shadow: 0 0 10px #ff00ff;
+            transition: 0.3s;
+            text-align: center;
+        }
+        input:focus {
+            outline: none;
+            box-shadow: 0 0 20px #ff00ff;
+        }
+        button {
+            background: #ff00ff;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 0 10px #ff00ff;
+            transition: 0.3s;
+        }
+        button:hover {
+            background: #d400d4;
+            box-shadow: 0 0 20px #ff00ff;
+        }
+        .output {
+            margin-top: 20px;
+            padding: 10px;
+            background: #222;
+            border-radius: 5px;
+            color: #0ff;
+            min-height: 40px;
+            font-family: 'Press Start 2P', cursive;
+            word-wrap: break-word;
+        }
+        .car-container {
+            margin-top: 30px;
+        }
+        .car-container img {
+            width: 300px;
+        }
+ .home-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(45deg, #8a2be2, #4b0082, #0000ff);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow:
+        0 0 15px rgba(138, 43, 226, 0.8),
+        0 0 30px rgba(0, 0, 255, 0.6),
+        0 4px 6px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: none;
+    animation: pulsate 2s infinite;
+    overflow: hidden;
+}
+
+.home-button::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 2px solid rgba(138, 43, 226, 0.6);
+    animation: pulse 2s infinite;
+    box-sizing: border-box;
+}
+
+.home-button::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    transform: rotate(45deg);
+    opacity: 0;
+    transition: opacity 0.5s;
+}
+
+.home-button:hover::after {
+    opacity: 1;
+}
+
+.home-button img {
+    width: 30px;
+    height: 30px;
+    filter: invert(1) drop-shadow(0 0 2px rgba(255, 255, 255, 0.7));
+    transition: transform 0.3s ease;
+    z-index: 1;
+}
+
+.home-button:hover {
+    transform: scale(1.15) rotate(360deg);
+    background: linear-gradient(45deg, #7b00ff, #37006b, #0000cd);
+    box-shadow:
+        0 0 25px rgba(138, 43, 226, 0.9),  /* Усиленное фиолетовое свечение */
+        0 0 50px rgba(0, 0, 255, 0.7),      /* Усиленное синее свечение */
+        0 6px 8px rgba(0, 0, 0, 0.3);
+    animation: none;
+}
+
+.home-button:hover::before {
+    animation: none;
+    border: 3px solid rgba(138, 43, 226, 0.8);
+}
+
+@keyframes pulsate {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+        #hiddenForm{
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Задача 3</h2>
+        <input type="text" id="zeroResidual" placeholder="Нулевая остаточная">
+        <input type="text" id="oneResidual" placeholder="Единичная остаточная">
+        <input type="text" id="argumentIndex" placeholder="Номер аргумента">
+        <button onclick="saveData()">Получить результат</button>
+        <h3>Вектор функции</h3>
+        <div class="output" id="output"></div>
+    </div>
+    <div class="car-container">
+        <img src="{% static 'images/tasks/3/car.png' %}" alt="Retrowave Car">
+    </div>
+    <a href="/" class="home-button">
+        <img src="https://cdn-icons-png.flaticon.com/512/25/25694.png" alt="Home">
+    </a>
+    <script>
+        function saveData() {
+            const zeroResidual = document.getElementById("zeroResidual").value;
+            const oneResidual = document.getElementById("oneResidual").value;
+            const argumentIndex = document.getElementById("argumentIndex").value;
+            document.getElementById('hiddenFormInput1').value = zeroResidual.replace(/ /g, '');
+            document.getElementById('hiddenFormInput2').value = oneResidual.replace(/ /g, '');
+            document.getElementById('hiddenFormInput3').value = argumentIndex;
+            submitForm();;
+        }
+
+        function submitForm(event) {
+            if (event) {
+                event.preventDefault();
+            }
+            const form = document.getElementById('hiddenForm');
+            const formData = new FormData(form);
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                }
+            })
+            .then(response => {
+                return response.json();
+            })
+            .then(data => {
+                document.getElementById('output').textContent = data.ans;
+            })
+        }
+
+        function loadOutput() {
+            document.getElementById("output").textContent = "то что выведет питон";
+        }
+        document.getElementById('zeroResidual').addEventListener('input', function(event) {
+    validateBinaryInput(event.target);
+});
+
+document.getElementById('oneResidual').addEventListener('input', function(event) {
+    validateBinaryInput(event.target);
+});
+
+document.getElementById('argumentIndex').addEventListener('input', function(event) {
+    validateNumericInput(event.target);
+});
+
+function validateBinaryInput(input) {
+    let value = input.value.replace(/[^01]/g, '');
+    value = value.replace(/(.{4})/g, '$1 ').trim();
+    input.value = value;
+}
+
+function validateNumericInput(input) {
+    input.value = input.value.replace(/[^0-9]/g, '');
+}
+    </script>
+</body>
+</html>
+
+<form action="{% url 'task_detail' pk=task.pk %}" method="post" id="hiddenForm">
+    {% csrf_token %}
+    <input type="text" id="hiddenFormInput1" name = "input1">
+    <input type="text" id="hiddenFormInput2" name = "input2">
+    <input type="text" id="hiddenFormInput3" name = "input3">
+</form>

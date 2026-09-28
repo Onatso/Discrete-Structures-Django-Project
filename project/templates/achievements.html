@@ -1,0 +1,147 @@
+{% load custom_filters %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Достижения</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .achievement-container {
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+            padding: 15px;
+            display: flex;
+            align-items: flex-start;
+        }
+        .achievement-image {
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        .achievement-details {
+            flex-grow: 1;
+        }
+        .achievement-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        .description-date-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 5px;
+        }
+        .achievement-description {
+            font-size: 14px;
+            color: black;
+            flex-grow: 1;
+            font-weight: 600;
+        }
+        .achievement-stats {
+            font-size: 15px;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .achievement-date {
+            font-size: 12px;
+            color: black;
+            margin-left: 15px;
+            white-space: nowrap;
+            font-weight: 600;
+        }
+        .locked {
+            opacity: 0.1;
+        }
+        .empty-message {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        .home-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    background-color: #3498db;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: background 0.3s, transform 0.2s;
+}
+
+.home-button img {
+    width: 24px;
+    height: 24px;
+    filter: invert(1);
+}
+
+.home-button:hover {
+    background-color: #2980b9;
+    transform: scale(1.1);
+}
+    </style>
+</head>
+
+{% block content %}
+<body>
+
+    {% for achievement in achievements %}
+        <div class="achievement-container">
+            <div class="achievement-image">
+                <img src= "{{achievement.image.url}}"
+                     width="64"
+                     height="64"
+                     style="object-fit: cover;"
+                     class="locked"
+                     id="image{{achievement.id}}">
+            </div>
+
+            <div class="achievement-details" id="{{achievement.id}}">
+                <div class="achievement-name">{{ achievement.name }}</div>
+                <div class="description-date-container">
+                    <div class="achievement-description">{{ achievement.description }}</div>
+                    <div class="achievement-date" id="date{{achievement.id}}">
+
+                    </div>
+                </div>
+                <div class="achievement-stats">
+                    Это достижение есть у {{ achievement_percents|get_item:achievement.id }} % пользователей
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="empty-message">
+            <p>Достижений пока нет.</p>
+        </div>
+    {% endfor %}
+
+<a href="/" class="home-button">
+        <img src="https://cdn-icons-png.flaticon.com/512/25/25694.png" alt="Home">
+    </a>
+
+</body>
+
+<script defer>
+    let user_achievements = "{{user_achievements}}";
+    {% for user_achievement in user_achievements %}
+        document.getElementById("image{{user_achievement.achievement.id}}").classList.remove('locked');
+        document.getElementById("date{{user_achievement.achievement.id}}").textContent =
+            'Получено {{ user_achievement.date|date:"d M. Y г., H:i" }}';
+    {% endfor %}
+</script>
+
+{% endblock content %}
+</html>

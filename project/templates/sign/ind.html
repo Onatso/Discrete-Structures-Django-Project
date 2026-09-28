@@ -1,0 +1,22 @@
+
+<title> Вход/Регистрация</title>
+        {% load static %}
+    <link href="{% static 'css/style2.css' %}" rel="stylesheet" />
+{% block content %}
+
+<center>
+    <h1> Стартовая страница</h1>
+
+</center>
+<h1><a href='{% url "account_login" %}'>Войти/Зарегистрироваться</a></h1>
+
+
+
+<div>
+    <h2>Здесь может быть приветственное окно</h2>
+</div>
+
+<button> <a href="accounts/logout/">Выйти</a> </button>
+
+
+{% endblock %}

@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>task5</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f0f4f8;
+            color: #2c3e50;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #3398d9;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        input, button {
+            padding: 12px 20px;
+            border: 2px solid #3398d9;
+            border-radius: 25px;
+            margin: 8px 0;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, button:hover {
+            outline: none;
+            box-shadow: 0 0 8px rgba(51, 152, 217, 0.3);
+        }
+
+        button {
+            background-color: #3398d9;
+            color: white;
+            cursor: pointer;
+            border: none;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: #2878a8;
+        }
+
+        #adjacentInputs {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+
+        .input-group {
+            margin: 15px 0;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #3398d9;
+            font-weight: 500;
+        }
+
+        canvas {
+            background: white;
+            border: 2px solid #3398d9;
+            border-radius: 15px;
+            margin: 20px auto;
+            display: block;
+        }
+
+        .home-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background-color: #3398d9;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+        }
+
+        .home-button:hover {
+            background-color: #2878a8;
+            transform: scale(1.1);
+        }
+
+        .home-button img {
+            width: 24px;
+            height: 24px;
+            filter: invert(1);
+        }
+
+        #hiddenForm {
+            display: none;
+        }
+
+        #result {
+            padding: 15px;
+            margin-top: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: bold;
+            color: #3398d9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Количество компонент связности</h1>
+
+        <div class="input-group">
+            <label for="vertexCount">Количество вершин (1-20):</label>
+            <input type="number" id="vertexCount" min="1" max="20">
+        </div>
+
+        <div id="adjacentInputs" class="hidden">
+            <p>Введите смежные вершины через пробел:</p>
+        </div>
+
+        <button onclick="processGraph()">Обработать</button>
+        <div id="result"></div>
+        <div class="graph-container"></div>
+    </div>
+
+    <a href="/" class="home-button">
+        <img src="https://cdn-icons-png.flaticon.com/512/25/25694.png" alt="Home">
+    </a>
+
+    <script>
+        const vertexCountInput = document.getElementById('vertexCount');
+        const adjacentInputs = document.getElementById('adjacentInputs');
+
+        vertexCountInput.addEventListener('input', function() {
+            const count = parseInt(this.value);
+            if (count >= 1 && count <= 20) {
+                adjacentInputs.classList.remove('hidden');
+                adjacentInputs.innerHTML = '<p>Введите смежные вершины через пробел</p>';
+
+                for (let i = 1; i <= count; i++) {
+                    const div = document.createElement('div');
+                    div.innerHTML = `
+                        <label>Вершина ${i}:</label>
+                        <input type="text" class="adjacent" data-vertex="${i-1}">
+                    `;
+                    adjacentInputs.appendChild(div);
+                }
+            } else {
+                adjacentInputs.classList.add('hidden');
+            }
+        });
+
+       function processGraph() {
+            const count = parseInt(vertexCountInput.value);
+            if (count < 1 || count > 20) return;
+
+            const adjacencyList = [];
+            const inputs = document.querySelectorAll('.adjacent');
+
+            inputs.forEach(input => {
+                const index = parseInt(input.dataset.vertex);
+                const values = input.value.trim().split(/\s+/)
+                    .filter(x => x !== '')
+                    .map(Number)
+                    .filter(v => v >= 1 && v <= count)
+                    .map(v => v - 1);
+
+                adjacencyList[index] = values;
+            });
+
+            for (let i = 0; i < count; i++) {
+                if (!adjacencyList[i]) adjacencyList[i] = [];
+            }
+
+            const edges = [];
+            for (let u = 0; u < adjacencyList.length; u++) {
+                for (const v of adjacencyList[u]) {
+                    if (v >= 0 && v < count) {
+                        edges.push([u, v]);
+                    }
+                }
+            }
+
+            const existingCanvas = document.querySelector('canvas');
+            if (existingCanvas) existingCanvas.remove();
+
+            drawGraph(count, edges);
+            document.getElementById('hiddenFormInput1').value = JSON.stringify(adjacencyList);
+            console.log(document.getElementById('hiddenFormInput1').value);
+            submitForm();
+        }
+
+        function submitForm(event) {
+            if (event) {
+                event.preventDefault();
+            }
+            const form = document.getElementById('hiddenForm');
+            const formData = new FormData(form);
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("result").textContent = data.components_count;
+            })
+        }
+
+        function drawGraph(vertexCount, edges) {
+            const container = document.querySelector('.graph-container');
+            container.innerHTML = '';
+
+            const canvas = document.createElement('canvas');
+            canvas.width = 600;
+            canvas.height = 600;
+            container.appendChild(canvas);
+
+            const ctx = canvas.getContext('2d');
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = 200;
+
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const vertexPositions = [];
+            for (let i = 0; i < vertexCount; i++) {
+                const angle = (2 * Math.PI * i) / vertexCount;
+                vertexPositions.push({
+                    x: centerX + radius * Math.cos(angle),
+                    y: centerY + radius * Math.sin(angle)
+                });
+            }
+
+            ctx.strokeStyle = '#3398d9';
+            ctx.lineWidth = 2;
+            for (const [u, v] of edges) {
+                const start = vertexPositions[u];
+                const end = vertexPositions[v];
+
+                ctx.beginPath();
+                ctx.moveTo(start.x, start.y);
+                ctx.lineTo(end.x, end.y);
+                ctx.stroke();
+            }
+
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = '#3398d9';
+            ctx.lineWidth = 2;
+
+            for (let i = 0; i < vertexCount; i++) {
+                const pos = vertexPositions[i];
+
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, 20, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = '#3398d9';
+                ctx.font = '16px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText((i + 1).toString(), pos.x, pos.y);
+
+                ctx.fillStyle = '#ffffff';
+            }
+        }
+    </script>
+</body>
+</html>
+
+<form action="{% url 'task_detail' pk=task.pk %}" method="post" id="hiddenForm">
+    {% csrf_token %}
+    <input type="text" id="hiddenFormInput1" name = "edges_count">
+</form>

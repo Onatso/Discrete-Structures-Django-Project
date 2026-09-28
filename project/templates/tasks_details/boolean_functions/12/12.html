@@ -1,0 +1,314 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>task12</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .video-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        #bg-video {
+            min-width: 100%;
+            min-height: 100%;
+            object-fit: cover;
+        }
+
+        .content {
+            position: relative;
+            z-index: 1;
+            color: white;
+            text-align: center;
+            padding: 50px 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .control-btn {
+            padding: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            border: none;
+            transition: 0.3s;
+            color: black;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: rgba(255, 165, 0, 0.2); /* Оранжевый оттенок */
+        }
+
+        .control-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+        #home-button img {
+            width: 24px;
+            height: 24px;
+        }
+
+        .dnf-form {
+            max-width: 500px;
+            margin: 20px auto;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(5px);
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 14px;
+        }
+
+        .process-btn {
+            width: 100%;
+            padding: 12px;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .result-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+        }
+
+        .enroll-btn {
+            display: none;
+            position: fixed;
+            bottom: 100px;
+            right: 30px;
+            padding: 12px 20px;
+            border-radius: 25px;
+            background: #ff4081;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 14px;
+            z-index: 2;
+        }
+
+        .enroll-btn:hover {
+            background: #f50057;
+        }
+
+        #hiddenForm{
+            display: none;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="video-container">
+        <video id="bg-video" autoplay muted loop playsinline preload="auto">
+            <source src='https://www.youtube.com/watch?v=IpijdlTq-eM&ab_channel=%D0%95%D0%B2%D0%B3%D0%B5%D0%BD%D0%B8%D0%B9%D0%A7%D0%B5%D1%80%D0%BA%D0%B0%D1%88%D0%B8%D0%BD' type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+
+    <div class="content">
+
+        <div class="dnf-form">
+            <div class="input-group">
+                <label data-key="inputLabel">Function vector:</label>
+                <input type="text"
+                       id="function-input"
+                       placeholder="Example: 01101001">
+            </div>
+
+            <button class="process-btn" data-key="processBtn" onclick="checkResult()">Process</button>
+
+            <div class="result-box">
+                <label data-key="resultLabel">Minimal DNF:</label>
+                <textarea readonly rows="2" id = "answer"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="control-btn" id="langBtn">RU</button>
+        <button class="control-btn" id="soundBtn">🔇</button>
+        <button class="control-btn" id="home-button" onclick="window.location.href='/'"><img src='{% static "images/peglin.png" %}' alt="Home"></button>
+
+    </div>
+
+    <button class="enroll-btn" id="enrollBtn">Sign up for a club</button>
+
+    <script>
+        const translations = {
+            ru: {
+                inputLabel: "Вектор функции:",
+                processBtn: "Обработать",
+                resultLabel: "Мин. ДНФ:",
+                placeholder: "Пример: 01101001",
+                enrollBtn: "Записаться в кружок"
+            },
+            en: {
+                inputLabel: "Function vector:",
+                processBtn: "Process",
+                resultLabel: "Minimal DNF:",
+                placeholder: "Example: 01101001",
+                enrollBtn: "Sign up for a club"
+            },
+            zh: {
+                inputLabel: "函数向量:",
+                processBtn: "处理",
+                resultLabel: "最小析取范式:",
+                placeholder: "示例: 01101001",
+                enrollBtn: "报名参加俱乐部"
+            }
+        };
+
+        const languages = ['ru', 'en', 'zh'];
+        let currentLangIndex = 0;
+        const video = document.getElementById('bg-video');
+        const soundBtn = document.getElementById('soundBtn');
+        const langBtn = document.getElementById('langBtn');
+        let isMuted = true;
+
+        langBtn.addEventListener('click', () => {
+        currentLangIndex = (currentLangIndex + 1) % languages.length;
+        const newLang = languages[currentLangIndex];
+        langBtn.textContent = newLang.toUpperCase();
+        updateTranslations(newLang);
+    });
+
+    function updateTranslations(lang) {
+        document.querySelectorAll('[data-key]').forEach(el => {
+            const key = el.dataset.key;
+            el.textContent = translations[lang][key];
+        });
+        document.getElementById('function-input').placeholder = translations[lang].placeholder;
+        document.getElementById('enrollBtn').textContent = translations[lang].enrollBtn;
+    }
+
+        soundBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            isMuted = !isMuted;
+            video.muted = isMuted;
+            soundBtn.textContent = isMuted ? '🔇' : '🔊';
+        });
+
+
+        video.muted = isMuted;
+        updateTranslations('ru');
+        langBtn.textContent = 'RU';
+
+         const enrollBtn = document.getElementById('enrollBtn');
+
+
+
+    video.addEventListener('ended', () => {
+        enrollBtn.style.display = 'block';
+    });
+
+
+    enrollBtn.addEventListener('click', () => {
+
+    const link = document.createElement('a');
+    link.href = 'kys.png';
+    link.download = 'kys.png';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+});
+
+    video.loop = false;
+    video.muted = isMuted;
+    video.play().catch(error => console.log('Autoplay blocked'));
+
+    function submitForm(event) {
+            if (event) {
+                event.preventDefault();
+            }
+            const form = document.getElementById('hiddenForm');
+            const formData = new FormData(form);
+            fetch(form.action, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+    }
+
+    document.getElementById('function-input').addEventListener('input', function(event) {
+    validateBinaryInput(event.target);
+});
+function validateBinaryInput(input) {
+    let value = input.value.replace(/[^01]/g, '');
+    value = value.replace(/(.{4})/g, '$1 ').trim();
+    input.value = value;
+}
+
+    function checkResult() {
+    document.getElementById('hiddenFormInput1').value = document.getElementById('function-input').value.replace(/ /g, '');
+    console.log(document.getElementById('hiddenFormInput1').value);
+    submitForm();
+}
+
+function submitForm(event) {
+            if (event) {
+                event.preventDefault();
+            }
+            const form = document.getElementById('hiddenForm');
+            const formData = new FormData(form);
+            fetch(form.action, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("answer").value = data.min_dnf;
+            })
+        }
+    </script>
+</body>
+</html>
+
+<form action="{% url 'task_detail' pk=task.pk %}" method="post" id="hiddenForm">
+    {% csrf_token %}
+    <input type="text" id="hiddenFormInput1" name = "bin_function">
+</form>

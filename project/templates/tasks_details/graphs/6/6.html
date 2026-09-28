@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>task6</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #2c3e50;
+            gap: 40px;
+        }
+        canvas {
+            background: #1a1a1a;
+            border-radius: 50%;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            cursor: pointer;
+        }
+        #adjacency-list {
+            background: #152642;
+            padding: 25px;
+            border-radius: 15px;
+            width: 300px;
+            max-height: 70vh;
+            overflow-y: auto;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+            border: 2px solid #c5a328;
+        }
+        .node-item {
+            color: #fff;
+            font-family: 'Arial', sans-serif;
+            font-size: 14px;
+            margin: 10px 0;
+            padding: 8px 15px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 5px;
+            display: flex;
+            align-items: baseline;
+        }
+        .node-number {
+            color: #c5a328;
+            font-weight: bold;
+            min-width: 30px;
+            margin-right: 10px;
+        }
+        .node-connections {
+            color: #fff;
+            word-break: break-word;
+        }
+        .list-header {
+            text-align: center;
+            color: #c5a328;
+            font-size: 24px;
+            font-family: 'Impact', sans-serif;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 2px black;
+        }
+        .betting-table {
+            position: absolute;
+            background: #005a00;
+            padding: 20px;
+            border-radius: 10px;
+            display: grid;
+            grid-template-columns: repeat(13, 1fr);
+            gap: 2px;
+            margin-top: 1100px;
+        }
+        .number-cell {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            position: relative;
+            border: 1px solid #444;
+        }
+        .chip {
+            width: 20px;
+            height: 20px;
+            background: gold;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            display: none;
+        }
+        .selected .chip {
+            display: block;
+        }
+        #score {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #152642;
+            padding: 15px 30px;
+            border-radius: 10px;
+            color: #c5a328;
+            font-family: 'Impact', sans-serif;
+            font-size: 24px;
+            border: 2px solid #c5a328;
+            box-shadow: 0 0 15px rgba(0,0,0,0.3);
+            z-index: 1000;
+        }
+        #hiddenForm{
+            display: none;
+        }
+        .home-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background-color: #3498db;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background 0.3s, transform 0.2s;
+        }
+        .home-button img {
+            width: 24px;
+            height: 24px;
+            filter: invert(1);
+        }
+        .home-button:hover {
+            background-color: #2980b9;
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+    <div id="score">Монеты: 10 000</div>
+    <div id="adjacency-list">
+        <div class="list-header">Список смежности</div>
+    </div>
+    <div class="betting-table" id="bettingTable"></div>
+
+    <a href="/" class="home-button">
+        <img src="https://cdn-icons-png.flaticon.com/512/25/25694.png" alt="Home">
+    </a>
+
+
+    <script>
+        let score = 10000;
+        function updateScore() {
+            document.getElementById('score').textContent = `Монеты: ${score.toLocaleString()}`;
+        }
+         let ans = 1;
+        let animationId = null;
+        let isAnimating = false; 
+        let ctx = null; 
+        let size = 900; 
+        let center = size/2;
+        let radius = size/2 - 20;
+        const rouletteNumbers = [
+            0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 
+            10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26
+        ];
+
+        function drawWheel() {
+            ctx.fillStyle = '#2d2d2d';
+            ctx.beginPath();
+            ctx.arc(center, center, radius, 0, Math.PI*2);
+            ctx.fill();
+
+            const gradient = ctx.createRadialGradient(center, center, radius-30, center, center, radius);
+            gradient.addColorStop(0, '#666');
+            gradient.addColorStop(1, '#999');
+            ctx.strokeStyle = gradient;
+            ctx.lineWidth = 30;
+            ctx.beginPath();
+            ctx.arc(center, center, radius-15, 0, Math.PI*2);
+            ctx.stroke();
+
+            rouletteNumbers.forEach((number, index) => {
+                const angle = (Math.PI*2) / 37;
+                const startAngle = index * angle - Math.PI/37 - Math.PI/2;
+                const endAngle = (index + 1) * angle - Math.PI/37 - Math.PI/2;
+
+                ctx.fillStyle = number === 0 ? '#008000' : 
+                             [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]
+                             .includes(number) ? '#c00' : '#000';
+
+                ctx.beginPath();
+                ctx.moveTo(center, center);
+                ctx.arc(center, center, radius-80, startAngle, endAngle);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.arc(center, center, radius-80, startAngle, endAngle);
+                ctx.lineTo(center, center);
+                ctx.stroke();
+
+                ctx.save();
+                ctx.translate(center, center);
+                ctx.rotate((startAngle + endAngle)/2);
+                
+                ctx.beginPath();
+                ctx.arc(radius-120, 0, 20, 0, Math.PI*2);
+                ctx.fillStyle = 'rgba(255,255,255,0.3)';
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 18px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(number, radius-120, 0);
+                
+                ctx.restore();
+            });
+
+            ctx.fillStyle = '#f0f0f0';
+            ctx.beginPath();
+            ctx.arc(center, center, 150, 0, Math.PI*2);
+            ctx.fill();
+            
+            ctx.strokeStyle = '#999';
+            ctx.lineWidth = 8;
+            ctx.beginPath();
+            ctx.arc(center, center, 140, 0, Math.PI*2);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.arc(center, center, 130, 0, Math.PI*2);
+            ctx.stroke();
+        }
+
+        function startBallAnimation() {
+            isAnimating = true; 
+            const targetIndex = rouletteNumbers.indexOf(ans);
+            const totalRotations = 3;
+            let startTime = null;
+            const duration = 5000;
+
+            function animate(timestamp) {
+                if (!startTime) startTime = timestamp;
+                const progress = timestamp - startTime;
+                const percent = Math.min(progress / duration, 1);
+
+                ctx.clearRect(0, 0, size, size);
+                drawWheel();
+
+                const startAngle = -Math.PI/2;
+                const rotations = totalRotations * 2 * Math.PI;
+                const targetAngle = (2 * Math.PI * targetIndex)/37 - Math.PI*2;
+                
+                const currentAngle = startAngle - rotations * percent + targetAngle * percent;
+
+                ctx.beginPath();
+                ctx.arc(
+                    center + Math.cos(currentAngle) * (radius - 50),
+                    center + Math.sin(currentAngle) * (radius - 50),
+                    10, 0, 2 * Math.PI
+                );
+                ctx.fillStyle = 'gold';
+                ctx.fill();
+
+                if (percent < 1) {
+            animationId = requestAnimationFrame(animate);
+        } else {
+            isAnimating = false; 
+            animationId = null;
+            if(selectedCell.textContent==ans) score+=1000;
+            else score-=1000;
+            updateScore();
+            G = generateConnections();
+            updateAdjacencyList(G);
+            document.getElementById('hiddenFormInput1').value = JSON.stringify(G);
+            submitForm();
+        }
+            }
+
+            if (animationId) cancelAnimationFrame(animationId);
+            animationId = requestAnimationFrame(animate);
+        }
+
+        function createBettingTable() {
+            const numbers = [
+                ['0', '0', '0'],  
+                [3, 2, 1],  
+                [6,5,4],  
+                [9,8,7],
+                [12,11,10],
+                [15,14,13],
+                [18,17,16],
+                [21,20,19],
+                [24,23,22],
+                [27,26,25],
+                [30,29,28],
+                [33,32,31],
+                [36,35,34]
+            ];
+            
+            const table = document.getElementById('bettingTable');
+            table.innerHTML = '';
+            
+            const zeroColumn = document.createElement('div');
+            zeroColumn.className = 'zero-column';
+            numbers[0].forEach(num => {
+                const cell = createNumberCell(num);
+                zeroColumn.appendChild(cell);
+            });
+            table.appendChild(zeroColumn);
+            
+            for(let i = 1; i < numbers.length; i++) {
+                const column = document.createElement('div');
+                column.className = 'number-column';
+                numbers[i].forEach(num => {
+                    const cell = createNumberCell(num);
+                    column.appendChild(cell);
+                });
+                table.appendChild(column);
+            }
+        }
+
+        function createNumberCell(num) {
+            const cell = document.createElement('div');
+            cell.className = `number-cell ${num === 0 ? 'zero' : ''}`;
+            cell.textContent = num;
+            cell.style.backgroundColor = getColor(num);
+            
+            const chip = document.createElement('div');
+            chip.className = 'chip';
+            cell.appendChild(chip);
+            
+            cell.addEventListener('click', () => placeChip(num, cell));
+            return cell;
+        }
+        function getColor(number) {
+            if(number == 0) return '#008000';
+            const redNumbers = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
+            return redNumbers.includes(number) ? '#c00' : '#000';
+        }
+
+        let selectedCell = null;
+
+         function placeChip(number, cell) {
+             if (isAnimating) return; 
+    
+    if (selectedCell) {
+        selectedCell.classList.remove('selected');
+    }
+    cell.classList.add('selected');
+    selectedCell = cell;
+    startBallAnimation();
+        }
+
+        createBettingTable();
+        function generateConnections() {
+            const connections = Array.from({ length: 37 }, () => []);
+
+            if(Math.random() < 0.5) {
+                for (let i = 0; i < 37; i++) {
+                    for (let j = i + 1; j < 37; j++) {
+                        if (Math.random() < 0.05) {
+                            connections[i].push(j);
+                            connections[j].push(i);
+                        }
+                    }
+                }
+            } else {
+                for (let i = 0; i < 37; i++) {
+                    for (let j = i + 1; j < 37; j++) {
+                        if (Math.random() < 0.025) {
+                            connections[i].push(j);
+                            connections[j].push(i);
+                        }
+                    }
+                }
+            }
+
+            connections.forEach(arr => arr.sort((a, b) => a - b));
+            return connections;
+        }
+
+        function updateAdjacencyList(graph) {
+            const container = document.getElementById('adjacency-list');
+            container.innerHTML = '<div class="list-header">Список смежности</div>';
+            
+            graph.forEach((connections, node) => {
+                const div = document.createElement('div');
+                div.className = 'node-item';
+                
+                const numberSpan = document.createElement('span');
+                numberSpan.className = 'node-number';
+                numberSpan.textContent = `${node}:`;
+                
+                const connSpan = document.createElement('span');
+                connSpan.className = 'node-connections';
+                connSpan.textContent = connections.join(', ');
+                
+                div.appendChild(numberSpan);
+                div.appendChild(connSpan);
+                container.appendChild(div);
+            });
+        }
+ 
+         const createRouletteWheel = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            document.body.insertBefore(canvas, document.getElementById('adjacency-list'));
+            ctx = canvas.getContext('2d');
+
+            drawWheel();
+        };
+
+        createRouletteWheel();
+        Graph = generateConnections();
+        updateAdjacencyList(Graph);
+        window.onload = function() {
+            document.getElementById('hiddenFormInput1').value = JSON.stringify(Graph);
+            console.log(document.getElementById('hiddenFormInput1').value);
+            submitForm();
+        };
+
+        function submitForm(event) {
+            if (event) {
+                event.preventDefault(); 
+            }
+            const form = document.getElementById('hiddenForm');
+            const formData = new FormData(form);
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                ans = data.right_components_count;
+            })
+        }
+    </script>
+    
+</body>
+</html>
+
+
+<form action="{% url 'task_detail' pk=task.pk %}" method="post" id="hiddenForm">
+    {% csrf_token %}
+    <input type="text" id="hiddenFormInput1" name = "components_count">
+</form>

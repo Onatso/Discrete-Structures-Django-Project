@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Задания</title>
+    {% load static %}
+    <link href="{% static 'css/navbar.css' %}" rel="stylesheet" />
+    <style>
+.navbar-brand {
+            margin: 0 15px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            font-size: 1.1em;
+            font-weight: 500;
+            color: #333;
+            border: 21px solid white;
+        }
+
+        .navbar-brand.active {
+            font-weight: 700;
+            font-size: 2em;
+            color: #000;
+            position: relative;
+        }
+
+        .navbar-brand.active::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: #007bff;
+            border-radius: 2px;
+        }
+
+        .navbar-brand:hover {
+            text-decoration: none;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a class="navbar-brand" href="/" id="booleans_a">BoolPlayground</a>
+            <a class="navbar-brand" href="/?page={{graphs_begin}}" id="graphs_a">GraphsPlayground</a>
+            <div class="navbar-collapse">
+                <ul class="navbar-nav">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item"><a class="nav-link" href="{% url 'user_page' %}">Моя страница</a></li>
+                    {% else %}
+                        <li class="nav-item"><a class="nav-link" href="{% url 'account_login' %}">Вход</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'account_signup' %}">Регистрация</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+</body>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let url = window.location.search;
+            let url_params = new URLSearchParams(url);
+            let page = url_params.get('page');
+            
+            if(!page) {
+                page = 1;
+            }
+            
+            let graphs_a = document.getElementById("graphs_a");
+            let booleans_a = document.getElementById("booleans_a");
+            let graphs_begin_page = {{graphs_begin}};
+
+            document.querySelectorAll('.navbar-brand').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+
+            if (page < graphs_begin_page) {
+                booleans_a.classList.add('active');
+            }
+            else {
+                graphs_a.classList.add('active');
+            }
+            
+
+            graphs_a.addEventListener('click', function() {
+                document.querySelectorAll('.navbar-brand').forEach(link => {
+                    link.classList.remove('active');
+                });
+                this.classList.add('active');
+            });
+            
+            booleans_a.addEventListener('click', function() {
+                document.querySelectorAll('.navbar-brand').forEach(link => {
+                    link.classList.remove('active');
+                });
+                this.classList.add('active');
+            });
+        });
+    </script>
+

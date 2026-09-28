@@ -1,0 +1,267 @@
+{% include 'template_title.html' %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>task10</title>
+    <style>
+        body {
+            background: linear-gradient(45deg, #ff00ff, #00ffff, #ff0000);
+            animation: bg 1s infinite;
+            font-family: "Comic Sans MS", "Papyrus", cursive;
+        }
+
+        @keyframes bg {
+            0% {filter: hue-rotate(0deg);}
+            100% {filter: hue-rotate(360deg);}
+        }
+
+        @keyframes float {
+    0% { transform: rotate(7deg) translate(0, 0); }
+    50% { transform: rotate(-7deg) translate(10px, 10px); }
+    100% { transform: rotate(7deg) translate(0, 0); }
+}
+
+        .blink {
+            animation: blinker 0.1s step-end infinite;
+        }
+
+        @keyframes blinker {
+            50% {opacity: 0;}
+        }
+
+        img {
+            transform: rotate(17deg);
+            border: 20px dotted lime;
+            margin: 5px;
+        }
+        .class-button {
+            font-size: 24px;
+            margin: 5px;
+            padding: 15px;
+            border: 5px dashed #ff0;
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+
+        .status-text {
+            font-family: 'Wingdings';
+            color: #0f0;
+            text-shadow: 0 0 10px #f00;
+            font-size: 32px;
+            writing-mode: vertical-rl;
+        }
+         .modal-overlay {
+        position: fixed;
+        background: linear-gradient(45deg, #ff00ff, #00ffff);
+        border: 5px dashed red;
+        padding: 20px;
+        box-shadow: 0 0 30px yellow;
+        transform: rotate(7deg);
+        z-index: 9999;
+    }
+
+    .modal-close {
+        position: absolute;
+        top: -15px;
+        right: -15px;
+        background: #00ff00;
+        border: 3px dotted black;
+        cursor: pointer;
+        font-family: "Comic Sans MS";
+        padding: 5px 10px;
+    }
+
+    .modal-close:hover {
+        background: #ff0000;
+        color: white;
+    }
+
+    .chaos-button {
+        font-size: 32px;
+        background: linear-gradient(45deg, red, yellow);
+        padding: 20px;
+        margin: 20px;
+        border: 7px double black;
+        cursor: pointer;
+        animation: zoom 0.5s infinite alternate;
+    }
+
+    @keyframes zoom {
+        from { transform: scale(1); }
+        to { transform: scale(1.2); }
+    }
+    </style>
+</head>
+<body bgcolor="#0000FF" text="#00FF00">
+    <marquee direction="up" scrollamount="20" height="500">
+        <center>
+            <h1 style="color: yellow; text-shadow: 10px 10px red;">
+                <blink>ДОБРО ПОЖАЛОВАТЬ НА МОЙ СУПЕР САЙТ!!!</blink>
+            </h1>
+        </center>
+    </marquee>
+
+    <table border="10" cellpadding="30" bgcolor="pink">
+        <tr>
+            <td><font size="7">МЕНЮ:</font></td>
+            <td>
+                   <ul style="list-style-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==');">
+                    <li><a href="/" style="color: black; background: white;">Главная</a></li>
+                    <li><a href="" style="color: white; background: black;" onclick="alert('Сереженька: ОБОЖАЕТ ДАНИЛА ШИЛОВА, Коленька: ОБОЖАЕТ ДАНИЛА ШИЛОВА, Данечка: ОБОЖАЕТ ДАНИЛА ШИЛОВА!!!!'); return false;">О нас</a></li>
+                    <li><a href="" style="color: red; background: blue;" onclick="alert('+7 (3952) 22-30-35'); return false;">Контакты</a></li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <div style="position: absolute; top: 200px; left: 500px;">
+        <img src="https://pngimg.com/uploads/rainbow/rainbow_PNG5584.png" width="300">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/4/47/PNG_transparency_demonstration_1.png" width="200" style="transform: skew(30deg);">
+    </div>
+
+    <iframe width="300" height="200" src="https://variety.com/wp-content/uploads/2021/07/Rick-Astley-Never-Gonna-Give-You-Up.png" style="border: 10px ridge orange; float: right;"></iframe>
+
+    <div style="background: repeating-linear-gradient(45deg, yellow, yellow 10px, black 10px, black 20px); padding: 40px;">
+        <p align="right" style="font-size: 24pt; color: white; mix-blend-mode: difference;">
+            САМЫЙ ЛУЧШИЙ ТЕКСТ НА СВЕТЕ! ПРИХОДИТЕ ЕЩЁ!
+            <span style="font-family: 'Times New Roman'; color: magenta;">&#128169;&#128169;&#128169;</span>
+        </p>
+    </div>
+    <div class="class-panel">
+        <h2 style="color: red; background: blue; transform: skew(20deg);">
+            СГЕНЕРИРОВАНО: <span id="number">0</span>
+            <br>
+            В ДВОИЧНОЙ: <span id="binary">00000000</span>
+        </h2>
+
+        <div style="background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAIklEQVQIW2NkQAKrVq36zwjjgzhhYWGMYAEYB8RmROaABADeOQ8CXl/xfgAAAABJRU5ErkJggg=='); padding: 10px;">
+            <button class="class-button" onclick="toggleBtn(0)">T0</button>
+            <button class="class-button" onclick="toggleBtn(1)">T1</button>
+            <button class="class-button" onclick="toggleBtn(2)">S</button>
+            <button class="class-button" onclick="toggleBtn(3)">M</button>
+            <button class="class-button" onclick="toggleBtn(4)">L</button>
+        </div>
+
+        <div class="status-text">
+            Зеленый - принадлежит, красный - нет!!! ↑↓↑↓
+        </div>
+
+        <button onclick="checkResult()"
+                style="font-size: 40px; background: #f0f; color: #0ff; border: 8px groove #ff0; margin-top: 20px;">
+            ПРОВЕРИТЬ???
+        </button>
+    </div>
+
+    <button class="chaos-button" onclick="createModalArmy()">
+    🎉 АТКРЫТЬ МАДАЛЬНЫЕ ОКНА! 🎊
+</button>
+
+    <script>
+
+        alert("Я ОБОЖАЮ ДАНИЛА ШИЛОВА!!!!!");
+        let targetNumber = Math.floor(Math.random() * 256);
+        let binaryArray = targetNumber.toString(2).padStart(8, '0');
+        let btns = "00000";
+
+        document.getElementById('number').textContent = targetNumber;
+        document.getElementById('binary').textContent = binaryArray;
+
+        function toggleBtn(index) {
+            const button = document.getElementsByClassName('class-button')[index];
+
+            if (btns[index] === '0') {
+                btns = btns.substring(0, index) + '1' + btns.substring(index + 1);
+                button.style.background = '#0f0';
+                button.style.color = '#000';
+            } else {
+                btns = btns.substring(0, index) + '0' + btns.substring(index + 1);
+                button.style.background = '#f00';
+                button.style.color = '#ff0';
+            }
+
+            button.style.transform = `rotate(${Math.random() * 20 - 10}deg)`;
+        }
+        function checkResult() {
+            document.getElementById('hiddenFormInput1').value = binaryArray;
+            document.getElementById('hiddenFormInput2').value = btns;
+            submitForm();
+        }
+
+        function submitForm(event) {
+            if (event) {
+                event.preventDefault();
+            }
+            const form = document.getElementById('hiddenForm');
+            const formData = new FormData(form);
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.right_or_not);
+                if(data.right_or_not){
+                    targetNumber = Math.floor(Math.random() * 256);
+                    binaryArray = targetNumber.toString(2).padStart(8, '0');
+                    document.getElementById('number').textContent = targetNumber;
+                    document.getElementById('binary').textContent = binaryArray;
+                }
+            })
+        }
+
+        setTimeout(() => {
+            Array.from(document.getElementsByClassName('class-button')).forEach((btn, i) => {
+                btn.style.background = '#f00';
+                btn.style.color = '#ff0';
+            });
+        }, 100);
+        function createModalArmy() {
+    const messages = [
+        "РАДИ НЕГО",
+        "ДАНЯ ШИЛОВ ЛУЧШИЙ!",
+        "ДАНИЛКА, А Я ТЕБЯ ЛЮБЛЮ",
+        "ДАНЬКА - МОЕ СОЛНЫШКО",
+        "ОБОЖАЮ СВОЕГО ДАНЕЧКУ!",
+        "ЗДЕСЬ БЫЛ ДАНИЛ ШИЛОВ))",
+        "ДАНЬКО - ЛУЧШИЙ!",
+        "ДАНЕЧКА = <3",
+    ];
+
+    for(let i = 0; i < 71; i++) {
+        const modal = document.createElement('div');
+        const x = Math.random() * (window.innerWidth - 200);
+        const y = Math.random() * (window.innerHeight - 150);
+
+        modal.className = 'modal-overlay';
+        modal.style.left = x + 'px';
+        modal.style.top = y + 'px';
+        modal.innerHTML = `
+            <button class="modal-close" onclick="this.parentElement.remove()">
+                ✖ ЗАКРЫТЬ ✖
+            </button>
+            <marquee behavior="alternate" scrollamount="${Math.random()*20+5}">
+                ${messages[Math.floor(Math.random()*messages.length)]}
+            </marquee>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Добавляем случайную анимацию
+        modal.style.animation = `
+            float ${2 + Math.random()*3}s infinite ease-in-out
+        `;
+    }
+}
+
+    </script>
+</body>
+</html>
+
+<form action="{% url 'task_detail' pk=task.pk %}" method="post" id="hiddenForm">
+    {% csrf_token %}
+    <input type="text" id="hiddenFormInput1" name = "bin">
+    <input type="text" id="hiddenFormInput2" name = "user_ans">
+</form>

@@ -1,0 +1,302 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Анимация построения минимального остова</title>
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        input, button {
+            padding: 8px 12px;
+            font-size: 16px;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            margin-top: 20px;
+            background-color: #f9f9f9;
+        }
+        .info {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Анимация построения минимального остовного дерева</h1>
+
+    <div class="controls">
+        <label for="vertexCount">Количество вершин:</label>
+        <input type="number" id="vertexCount" min="3" max="15" value="5">
+        <button id="generateGraph">Построить граф</button>
+        <button id="animateMST">Анимировать построение остова</button>
+    </div>
+
+    <div class="info" id="info">
+        Сгенерируйте граф, затем нажмите "Анимировать построение остова"
+    </div>
+
+    <canvas id="graphCanvas" width="600" height="400"></canvas>
+
+    <script>
+        const canvas = document.getElementById('graphCanvas');
+        const ctx = canvas.getContext('2d');
+        const vertexCountInput = document.getElementById('vertexCount');
+        const generateGraphBtn = document.getElementById('generateGraph');
+        const animateMSTBtn = document.getElementById('animateMST');
+        const infoEl = document.getElementById('info');
+
+        let graph = {
+            vertices: [],
+            edges: [],
+            adjacencyList: []
+        };
+        let animationEdges = [];
+        let animationStep = 0;
+        let animationInterval = null;
+
+        // Генерация связного взвешенного графа
+        function generateConnectedWeightedGraph(vertexCount) {
+            const vertices = [];
+            const edges = [];
+            const adjacencyList = Array(vertexCount).fill().map(() => []);
+
+            // Расположение вершин по кругу
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = Math.min(canvas.width, canvas.height) * 0.4;
+
+            for (let i = 0; i < vertexCount; i++) {
+                const angle = (i * 2 * Math.PI) / vertexCount;
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                vertices.push({ x, y, id: i });
+            }
+
+            // Сначала создаем остовное дерево для обеспечения связности
+            const mstEdges = [];
+            const parent = Array(vertexCount).fill(-1);
+
+            function find(u) {
+                if (parent[u] === -1) return u;
+                return find(parent[u]);
+            }
+
+            function union(u, v) {
+                const rootU = find(u);
+                const rootV = find(v);
+                if (rootU !== rootV) {
+                    parent[rootV] = rootU;
+                    return true;
+                }
+                return false;
+            }
+
+            // Добавляем случайные ребра для остовного дерева
+            const addedEdges = new Set();
+
+            while (mstEdges.length < vertexCount - 1) {
+                const u = Math.floor(Math.random() * vertexCount);
+                const v = Math.floor(Math.random() * vertexCount);
+
+                if (u !== v && !addedEdges.has(`${Math.min(u, v)}-${Math.max(u, v)}`)) {
+                    addedEdges.add(`${Math.min(u, v)}-${Math.max(u, v)}`);
+
+                    if (union(u, v)) {
+                        const weight = Math.floor(Math.random() * 20) + 1;
+                        mstEdges.push({ u, v, weight });
+                        adjacencyList[u].push({ v, weight });
+                        adjacencyList[v].push({ u, weight });
+                    }
+                }
+            }
+
+            // Добавляем дополнительные случайные ребра (примерно 30% от возможных)
+            const maxAdditionalEdges = Math.floor((vertexCount * (vertexCount - 1) / 2 - (vertexCount - 1)) * 0.3);
+
+            for (let i = 0; i < maxAdditionalEdges; i++) {
+                const u = Math.floor(Math.random() * vertexCount);
+                const v = Math.floor(Math.random() * vertexCount);
+
+                if (u !== v && !addedEdges.has(`${Math.min(u, v)}-${Math.max(u, v)}`)) {
+                    addedEdges.add(`${Math.min(u, v)}-${Math.max(u, v)}`);
+                    const weight = Math.floor(Math.random() * 20) + 1;
+                    edges.push({ u, v, weight });
+                    adjacencyList[u].push({ v, weight });
+                    adjacencyList[v].push({ u, weight });
+                }
+            }
+
+            return {
+                vertices,
+                edges: [...mstEdges, ...edges],
+                adjacencyList
+            };
+        }
+
+        // Алгоритм Крускала для нахождения MST
+        function kruskalMST(edges, vertexCount) {
+            // Сортируем ребра по весу
+            const sortedEdges = [...edges].sort((a, b) => a.weight - b.weight);
+
+            const parent = Array(vertexCount).fill(-1);
+            const mstEdges = [];
+
+            function find(u) {
+                if (parent[u] === -1) return u;
+                return find(parent[u]);
+            }
+
+            function union(u, v) {
+                const rootU = find(u);
+                const rootV = find(v);
+                if (rootU !== rootV) {
+                    parent[rootV] = rootU;
+                    return true;
+                }
+                return false;
+            }
+
+            for (const edge of sortedEdges) {
+                if (union(edge.u, edge.v)) {
+                    mstEdges.push(edge);
+                    if (mstEdges.length === vertexCount - 1) break;
+                }
+            }
+
+            return mstEdges;
+        }
+
+        // Отрисовка графа с выделенными ребрами
+        function drawGraph(highlightEdges = []) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Рисуем все ребра серым цветом
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 1;
+            ctx.font = '12px Arial';
+            ctx.fillStyle = '#000';
+
+            for (const edge of graph.edges) {
+                const u = graph.vertices[edge.u];
+                const v = graph.vertices[edge.v];
+
+                ctx.beginPath();
+                ctx.moveTo(u.x, u.y);
+                ctx.lineTo(v.x, v.y);
+                ctx.stroke();
+
+                // Подпись веса ребра
+                const midX = (u.x + v.x) / 2;
+                const midY = (u.y + v.y) / 2;
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(midX - 10, midY - 10, 20, 20);
+                ctx.fillStyle = '#000';
+                ctx.fillText(edge.weight.toString(), midX - 5, midY + 5);
+            }
+
+            // Рисуем выделенные ребра красным цветом
+            ctx.strokeStyle = 'red';
+            ctx.lineWidth = 3;
+
+            for (const edge of highlightEdges) {
+                const u = graph.vertices[edge.u];
+                const v = graph.vertices[edge.v];
+
+                ctx.beginPath();
+                ctx.moveTo(u.x, u.y);
+                ctx.lineTo(v.x, v.y);
+                ctx.stroke();
+
+                // Подпись веса ребра
+                const midX = (u.x + v.x) / 2;
+                const midY = (u.y + v.y) / 2;
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(midX - 10, midY - 10, 20, 20);
+                ctx.fillStyle = 'red';
+                ctx.fillText(edge.weight.toString(), midX - 5, midY + 5);
+            }
+
+            // Рисуем вершины
+            ctx.fillStyle = '#3498db';
+            for (const vertex of graph.vertices) {
+                ctx.beginPath();
+                ctx.arc(vertex.x, vertex.y, 15, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(vertex.id.toString(), vertex.x, vertex.y);
+                ctx.fillStyle = '#3498db';
+            }
+        }
+
+        // Анимация построения MST
+        function animateMST() {
+            if (animationInterval) {
+                clearInterval(animationInterval);
+            }
+
+            animationStep = 0;
+            const mstEdges = kruskalMST(graph.edges, graph.vertices.length);
+
+            infoEl.textContent = "Анимация построения минимального остовного дерева...";
+
+            animationInterval = setInterval(() => {
+                if (animationStep < mstEdges.length) {
+                    drawGraph(mstEdges.slice(0, animationStep + 1));
+                    animationStep++;
+                } else {
+                    clearInterval(animationInterval);
+                    infoEl.textContent = "Минимальное остовное дерево построено!";
+                }
+            }, 1000);
+        }
+
+        // Обработчики событий
+        generateGraphBtn.addEventListener('click', () => {
+            const vertexCount = parseInt(vertexCountInput.value);
+            if (vertexCount < 3 || vertexCount > 15) {
+                alert('Количество вершин должно быть от 3 до 15');
+                return;
+            }
+
+            if (animationInterval) {
+                clearInterval(animationInterval);
+            }
+
+            graph = generateConnectedWeightedGraph(vertexCount);
+            drawGraph();
+            infoEl.textContent = "Граф построен. Нажмите 'Анимировать построение остова'";
+        });
+
+        animateMSTBtn.addEventListener('click', () => {
+            if (graph.vertices.length === 0) {
+                alert('Сначала постройте граф');
+                return;
+            }
+
+            animateMST();
+        });
+
+        // Инициализация с графом по умолчанию
+        generateGraphBtn.click();
+    </script>
+</body>
+</html>

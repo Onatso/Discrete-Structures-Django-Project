@@ -1,0 +1,268 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Визуализация графов и алгоритм Дейкстры</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        input, button {
+            padding: 8px 12px;
+            font-size: 16px;
+        }
+        button {
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        canvas {
+            border: 1px solid #ddd;
+            margin-top: 20px;
+        }
+        .info {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f8f8f8;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Визуализация графа и поиск кратчайших путей</h1>
+
+    <div class="controls">
+        <label for="vertexCount">Количество вершин:</label>
+        <input type="number" id="vertexCount" min="2" max="20" value="5">
+        <button id="buildGraph">Построить граф</button>
+        <button id="findPaths">Найти кратчайшие пути</button>
+    </div>
+
+    <canvas id="graphCanvas" width="800" height="500"></canvas>
+
+    <div id="info" class="info">
+        <p>1. Введите количество вершин</p>
+        <p>2. Нажмите "Построить граф" для создания случайного связного взвешенного графа</p>
+        <p>3. Нажмите "Найти кратчайшие пути", затем кликните на вершину для выбора начальной точки</p>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('graphCanvas');
+        const ctx = canvas.getContext('2d');
+        const vertexCountInput = document.getElementById('vertexCount');
+        const buildGraphBtn = document.getElementById('buildGraph');
+        const findPathsBtn = document.getElementById('findPaths');
+        const infoDiv = document.getElementById('info');
+
+        let graph = [];
+        let vertices = [];
+        let selectedVertex = null;
+        let distances = [];
+        let mode = 'view'; // 'view' или 'select'
+
+        // Инициализация
+        init();
+
+        function init() {
+            buildGraphBtn.addEventListener('click', buildGraph);
+            findPathsBtn.addEventListener('click', () => {
+                mode = 'select';
+                infoDiv.innerHTML = '<p>Выберите начальную вершину, кликнув по ней</p>';
+            });
+            canvas.addEventListener('click', handleCanvasClick);
+        }
+
+        function buildGraph() {
+            const vertexCount = parseInt(vertexCountInput.value);
+            if (vertexCount < 2 || vertexCount > 20) {
+                alert('Количество вершин должно быть от 2 до 20');
+                return;
+            }
+
+            // Сброс состояния
+            mode = 'view';
+            selectedVertex = null;
+            distances = [];
+
+            // Генерация случайных позиций вершин
+            vertices = [];
+            for (let i = 0; i < vertexCount; i++) {
+                vertices.push({
+                    x: 50 + Math.random() * (canvas.width - 100),
+                    y: 50 + Math.random() * (canvas.height - 100),
+                    radius: 20
+                });
+            }
+
+            // Создание связного графа (матрица смежности)
+            graph = Array(vertexCount).fill().map(() => Array(vertexCount).fill(0));
+
+            // Сначала создаем остовное дерево, чтобы граф был связным
+            for (let i = 1; i < vertexCount; i++) {
+                const j = Math.floor(Math.random() * i);
+                const weight = Math.floor(Math.random() * 9) + 1; // Вес от 1 до 9
+                graph[i][j] = weight;
+                graph[j][i] = weight;
+            }
+
+            // Добавляем дополнительные ребра для усложнения графа
+            const extraEdges = Math.floor(vertexCount * 1.5);
+            for (let e = 0; e < extraEdges; e++) {
+                const i = Math.floor(Math.random() * vertexCount);
+                const j = Math.floor(Math.random() * vertexCount);
+                if (i !== j && graph[i][j] === 0) {
+                    const weight = Math.floor(Math.random() * 9) + 1;
+                    graph[i][j] = weight;
+                    graph[j][i] = weight;
+                }
+            }
+
+            drawGraph();
+            infoDiv.innerHTML = '<p>Граф построен. Нажмите "Найти кратчайшие пути" для поиска.</p>';
+        }
+
+        function drawGraph() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Рисуем ребра
+            ctx.strokeStyle = '#888';
+            ctx.lineWidth = 2;
+            ctx.font = '16px Arial';
+            ctx.fillStyle = 'black';
+
+            for (let i = 0; i < graph.length; i++) {
+                for (let j = i + 1; j < graph.length; j++) {
+                    if (graph[i][j] > 0) {
+                        // Линия
+                        ctx.beginPath();
+                        ctx.moveTo(vertices[i].x, vertices[i].y);
+                        ctx.lineTo(vertices[j].x, vertices[j].y);
+                        ctx.stroke();
+
+                        // Вес ребра
+                        const midX = (vertices[i].x + vertices[j].x) / 2;
+                        const midY = (vertices[i].y + vertices[j].y) / 2;
+                        ctx.fillText(graph[i][j].toString(), midX, midY);
+                    }
+                }
+            }
+
+            // Рисуем вершины
+            for (let i = 0; i < vertices.length; i++) {
+                ctx.beginPath();
+                ctx.arc(vertices[i].x, vertices[i].y, vertices[i].radius, 0, Math.PI * 2);
+
+                if (selectedVertex === i) {
+                    ctx.fillStyle = '#ff9900';
+                } else if (distances[i] !== undefined) {
+                    ctx.fillStyle = '#99ff99';
+                } else {
+                    ctx.fillStyle = '#4CAF50';
+                }
+
+                ctx.fill();
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Номер вершины
+                ctx.fillStyle = 'black';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(i.toString(), vertices[i].x, vertices[i].y);
+
+                // Если есть расстояния, отображаем их
+                if (distances[i] !== undefined) {
+                    ctx.fillText(distances[i].toString(), vertices[i].x, vertices[i].y + 30);
+                }
+            }
+        }
+
+        function handleCanvasClick(e) {
+            if (mode !== 'select') return;
+
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            // Проверяем, кликнули ли по вершине
+            for (let i = 0; i < vertices.length; i++) {
+                const v = vertices[i];
+                const distance = Math.sqrt((x - v.x) ** 2 + (y - v.y) ** 2);
+                if (distance <= v.radius) {
+                    selectedVertex = i;
+                    distances = dijkstra(graph, selectedVertex);
+                    drawGraph();
+                    mode = 'view';
+
+                    // Формируем информацию о расстояниях
+                    let infoHTML = `<p>Кратчайшие расстояния от вершины ${selectedVertex}:</p><ul>`;
+                    for (let j = 0; j < distances.length; j++) {
+                        if (j !== selectedVertex) {
+                            infoHTML += `<li>До вершины ${j}: ${distances[j]}</li>`;
+                        }
+                    }
+                    infoHTML += '</ul>';
+                    infoDiv.innerHTML = infoHTML;
+
+                    break;
+                }
+            }
+        }
+
+        // Алгоритм Дейкстры для поиска кратчайших путей
+        function dijkstra(graph, start) {
+            const n = graph.length;
+            const distances = new Array(n).fill(Infinity);
+            const visited = new Array(n).fill(false);
+
+            distances[start] = 0;
+
+            for (let i = 0; i < n - 1; i++) {
+                const u = minDistance(distances, visited);
+                visited[u] = true;
+
+                for (let v = 0; v < n; v++) {
+                    if (!visited[v] && graph[u][v] !== 0 &&
+                        distances[u] !== Infinity &&
+                        distances[u] + graph[u][v] < distances[v]) {
+                        distances[v] = distances[u] + graph[u][v];
+                    }
+                }
+            }
+
+            return distances;
+        }
+
+        function minDistance(distances, visited) {
+            let min = Infinity;
+            let minIndex = -1;
+
+            for (let v = 0; v < distances.length; v++) {
+                if (!visited[v] && distances[v] <= min) {
+                    min = distances[v];
+                    minIndex = v;
+                }
+            }
+
+            return minIndex;
+        }
+    </script>
+</body>
+</html>

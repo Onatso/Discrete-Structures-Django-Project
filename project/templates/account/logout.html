@@ -1,0 +1,87 @@
+
+{% load allauth i18n %}
+
+{% load static %}
+
+{% block content %}
+<div class="vs-container">
+    <h1 class="vs-title">
+        {% trans "Sign Out" %}
+    </h1>
+    <div class="vs-text">
+    <p>{% trans 'Are you sure you want to sign out?' %}</p>
+    {% url 'account_logout' as action_url %}
+    {% element form method="post" action=action_url no_visible_fields=True %}
+        {% slot body %}
+            {% csrf_token %}
+            {% if redirect_field_value %}
+                <input type="hidden"
+                       name="{{ redirect_field_name }}"
+                       value="{{ redirect_field_value }}" />
+            {% endif %}
+        {% endslot %}
+        {% slot actions %}
+            <button type="submit">
+                {% trans 'Sign Out' %}</button>
+        {% endslot %}
+    {% endelement %}</div>
+</div>
+
+
+<style>
+    body {
+    background-color: #ecf0f3;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+strong, ul{
+display: none;
+}
+.vs-container {
+    max-width: 800px;
+    padding: 30px;
+    background: #ffffff;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    text-align: left;
+}
+.vs-title {
+    color: #2c3e50;
+    font-size: 26px;
+    margin-bottom: 10px;
+    text-align: center;
+}
+.vs-text {
+    font-size: 20px;
+    color: #555;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+    button{
+    background-color: #3498db;
+        color: white;
+        font-size: 16px;
+        padding: 12px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        width: 100%;
+        transition: background 0.3s;
+    }
+</style>
+
+{% endblock content %}

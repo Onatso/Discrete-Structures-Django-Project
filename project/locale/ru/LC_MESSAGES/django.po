@@ -1,0 +1,149 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#: .\templates\account\messages\logged_in.txt:4
+#: .\templates\account\messages\logged_out.txt:2
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-03-24 16:22+0300\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || "
+"(n%100>=11 && n%100<=14)? 2 : 3);\n"
+
+#: .\templates\account\login.html:6
+msgid "Вход"
+msgstr ""
+
+#: .\templates\account\login.html:12
+msgid "Вход в систему"
+msgstr ""
+
+#: .\templates\account\login.html:14
+#, python-format
+msgid ""
+"Если у вас еще нет аккаунта, то сначала\n"
+"            <a href=\"%(signup_url)s\">зарегистрируйтесь</a>."
+msgstr ""
+
+#: .\templates\account\login.html:35
+msgid "Войти"
+msgstr ""
+
+#: .\templates\account\login.html:40 .\templates\account\signup.html:39
+msgid "или"
+msgstr ""
+
+#: .\templates\account\login.html:46 .\templates\account\signup.html:46
+msgid "Войти через Google"
+msgstr ""
+
+#: .\templates\account\logout.html:6 .\templates\account\logout.html:21
+#: .\templates\allauth\layouts\base.html:34
+msgid "Sign Out"
+msgstr ""
+
+#: .\templates\account\logout.html:8
+msgid "Are you sure you want to sign out?"
+msgstr ""
+
+#: .\templates\account\password_reset.html:5
+#: .\templates\account\password_reset.html:11
+msgid "Password Reset"
+msgstr ""
+
+#: .\templates\account\password_reset.html:20
+msgid ""
+"Forgotten your password? Enter your email address below, and we'll send you "
+"an email allowing you to reset it."
+msgstr ""
+
+#: .\templates\account\password_reset.html:31
+msgid "Reset My Password"
+msgstr ""
+
+#: .\templates\account\signup.html:6 .\templates\account\signup.html:11
+msgid "Регистрация"
+msgstr ""
+
+#: .\templates\account\signup.html:13
+#, python-format
+msgid "Уже есть аккаунт? <a href=\"%(login_url)s\">Войдите</a>."
+msgstr ""
+
+#: .\templates\account\signup.html:33
+msgid "Зарегистрироваться"
+msgstr ""
+
+#: .\templates\account\socialaccount\login.html:5
+#: .\templates\allauth\layouts\base.html:39
+msgid "Sign In"
+msgstr ""
+
+#: .\templates\account\socialaccount\login.html:10
+#, python-format
+msgid "Connect %(provider)s"
+msgstr ""
+
+#: .\templates\account\socialaccount\login.html:13
+#, python-format
+msgid "You are about to connect a new third-party account from %(provider)s."
+msgstr ""
+
+#: .\templates\account\socialaccount\login.html:17
+#, python-format
+msgid "Sign In Via %(provider)s"
+msgstr ""
+
+#: .\templates\account\socialaccount\login.html:20
+#, python-format
+msgid "You are about to sign in using a third-party account from %(provider)s."
+msgstr ""
+
+#: .\templates\account\socialaccount\login.html:27
+msgid "Continue"
+msgstr ""
+
+#: .\templates\account\verification_sent.html:7
+#: .\templates\account\verification_sent.html:12
+msgid "Verify Your Email Address"
+msgstr ""
+
+#: templates/account/verification_sent.html:15
+msgid "We have sent an email to you for verification. Follow the link provided to finalize the signup process"
+msgstr "Мы отправили вам письмо для подтверждения. Перейдите по указанной ссылке, чтобы завершить процесс регистрации."
+
+#: templates/account/verification_sent.html:19
+msgid "If you do not see the verification email in your main inbox, check your spam folder."
+msgstr "Если вы не видите письмо с подтверждением во входящих, проверьте папку «Спам»."
+
+#: templates/account/verification_sent.html:23
+msgid "Please contact us if you do not receive the verification email within a few minutes."
+msgstr "Пожалуйста, свяжитесь с нами, если вы не получили письмо с подтверждением в течение нескольких минут."
+
+#: .\templates\allauth\layouts\base.html:18
+msgid "Messages:"
+msgstr ""
+
+#: .\templates\allauth\layouts\base.html:26
+msgid "Menu:"
+msgstr ""
+
+#: .\templates\allauth\layouts\base.html:31
+msgid "Change Email"
+msgstr ""
+
+#: .\templates\allauth\layouts\base.html:42
+msgid "Sign Up"
+msgstr ""

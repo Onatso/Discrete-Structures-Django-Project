@@ -1,0 +1,243 @@
+{% include 'template_title.html' %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>task9</title>
+    {% load static %}
+
+    <style>
+        @font-face {
+            font-family: 'CounterStrike';
+            src: url('{% static "images/tasks/9/cs_regular.ttf" %}')
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: url('{% static "images/tasks/9/IMG_20250310_170740_704.png" %}') no-repeat center center;
+            background-size: 100% 100%;
+            height: 100vh;
+            font-family: 'CounterStrike', Arial, sans-serif;
+            color: yellow;
+        }
+
+        .header {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+            color: #FFD700;
+            font-family: 'CounterStrike', Arial, sans-serif;
+        }
+
+        .version {
+            color: #FFCC33;
+        }
+
+        .menu {
+            position: absolute;
+            bottom: 15%;
+            left: 5%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .menu button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            text-align: left;
+            cursor: pointer;
+            margin: 5px 0;
+            font-family: 'CounterStrike', Arial, sans-serif;
+        }
+
+        .menu button:hover {
+            color: #FFD700;
+        }
+
+        .cs-logo {
+            position: absolute;
+            bottom: 5%;
+            left: 5%;
+            font-size: 22px;
+            font-weight: bold;
+            color: yellow;
+            font-family: 'CounterStrike', Arial, sans-serif;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #4c5844;
+            padding: 20px;
+            color: white;
+            border: 1px solid white;
+            z-index: 1000;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.7);
+            text-align: left;
+            width: 350px;
+            border-radius: 10px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .modal label, .modal select, .modal input {
+            display: block;
+            margin: 10px 0;
+            color: white;
+        }
+
+        .modal input {
+            width: 100%;
+            height: 27px;
+            padding: 5px;
+            background: #333;
+            color: white;
+            border: 1px solid #ffffff;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .modal-buttons button {
+            width: 80px;
+            height: 30px;
+            background: none;
+            border: 1px solid #000000;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .output {
+        width: 96%;
+        margin-top: 10px;
+        padding: 5px;
+        border: 1px solid #ffffff;
+        min-height: 15px;
+        height: auto;
+        max-height: 150px;
+        overflow-y: auto;
+        background: #333;
+        color: white;
+        line-height: 1.5;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+
+
+        .dash{
+            color: white;
+        }
+        #hiddenForm{
+            display: none;
+        }
+        .overline {
+            text-decoration: none;
+            position: relative;
+            display: inline-block;
+        }
+        .overline::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0px;
+            width: 100%;
+            border-top: 2px solid yellow;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">BOOL<span class="dash">-</span>PLAYGROUND<span class="version"> Версия 0009</span></div>
+    <div class="menu">
+        <button id="newGameBtn">Новая игра</button>
+        <button>Найти серверы</button>
+        <button>Настройки</button>
+        <button onclick="window.location.href='/'">Выход</button>
+    </div>
+    <div class="cs-logo">BOOL<span class="dash">-</span>PLAYGROUND</div>
+
+    <div id="newGameModal" class="modal">
+        <div class="modal-header">
+            <span>Задача 9</span>
+        </div>
+        <label for="vectorInput">Вектор</label>
+        <input type="text" id="vectorInput" style="color: yellow; font-family: 'CounterStrike', Arial, sans-serif, sans-serif; background-color: black; border: 2px solid yellow; padding: 5px; font-size: 16px;"/>
+        <label for="output">СКНФ</label>
+        <div class="output" id="output" style="color: yellow; font-family: 'CounterStrike', Arial, sans-serif, sans-serif; background-color: black; border: 2px solid yellow; padding: 5px; font-size: 16px; text-shadow: 0 0 5px yellow, 0 0 10px yellow;"></div>
+        <div class="modal-buttons">
+            <button id="runTask" >Запуск</button>
+            <button id="cancelModal">Отмена</button>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('newGameBtn').addEventListener('click', function() {
+            document.getElementById('newGameModal').style.display = 'block';
+        });
+
+        document.getElementById('cancelModal').addEventListener('click', function() {
+            document.getElementById('newGameModal').style.display = 'none';
+            document.getElementById('vectorInput').value = "";
+            document.getElementById('output').textContent = "";
+        });
+
+        document.getElementById('runTask').addEventListener('click', function() {
+            document.getElementById('hiddenFormInput1').value = document.getElementById('vectorInput').value.replace(/ /g, '');
+            console.log(document.getElementById('hiddenFormInput1').value);
+            submitForm();
+        });
+        function submitForm(event) {
+            if (event) {
+                event.preventDefault();
+            }
+            const form = document.getElementById('hiddenForm');
+            const formData = new FormData(form);
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers : {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                    document.getElementById("output").innerHTML = data.res.replace(/&/g, '⋅').replace(/\|/g, " ∨ ").replace(/~x(\d+)/g, '<span class="overline">x$1</span>').replace(/(?<!~)x(\d+)/g, 'x<sub>$1</sub>').replace(/\(/g, ' ( ').replace(/\)/g, ' ) ');
+            })
+        }
+
+        document.getElementById('vectorInput').addEventListener('input', function(event) {
+    validateBinaryInput(event.target);
+});
+function validateBinaryInput(input) {
+    let value = input.value.replace(/[^01]/g, '');
+    value = value.replace(/(.{4})/g, '$1 ').trim();
+    input.value = value;
+}
+    </script>
+</body>
+</html>
+
+<form action="{% url 'task_detail' pk=task.pk %}" method="post" id="hiddenForm">
+    {% csrf_token %}
+    <input type="text" id="hiddenFormInput1" name = "vector">
+
+</form>

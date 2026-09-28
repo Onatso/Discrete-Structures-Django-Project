@@ -1,0 +1,179 @@
+{% include 'template_title.html' %}
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Выберите n</title>
+    {% load static %}
+    <link href= "{% static 'css/unpkg.css' %}" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #c3c3c3;
+            overflow: hidden;
+            user-select: none;
+        }
+        .window {
+            width: 500px;
+            position: absolute;
+            cursor: grab;
+            transition: all 0.3s ease;
+        }
+        .window.fullscreen {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            cursor: default;
+            top: 0 !important;
+            left: 0 !important;
+        }
+        .content {
+            padding: 10px;
+            font-size: 14px;
+            flex-grow: 1;
+        }
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .output {
+            margin-top: 10px;
+            padding: 5px;
+            background: white;
+            border: 2px inset #808080;
+            height: 25px;
+            transition: all 0.3s ease;
+            font-size: 2em;
+            text-align: center;
+        }
+        .window.fullscreen .buttons button {
+            font-size: 20px;
+            padding: 10px 20px;
+        }
+        .window.fullscreen p{
+            font-size: 20px;
+            text-align: center;
+        }
+        .window.fullscreen .output {
+            height: 50px;
+            font-size: 20px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .fullscreen-image {
+            display: none;
+            margin-top: 20px;
+            width: 80%;
+            max-width: 1000px;
+        }
+        .window.fullscreen .fullscreen-image {
+            display: block;
+            margin: 20px auto 0 auto;
+        }
+        #hiddenForm{
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="window" id="mainWindow">
+        <div class="title-bar" id="titleBar">
+            <div class="title-bar-text">Задача 1</div>
+            <div class="title-bar-controls">
+                <button aria-label="Minimize" onclick="window.location.href='/'"></button>
+                <button aria-label="Maximize" onclick="toggleFullscreen()"></button>
+                <button aria-label="Close" onclick="window.location.href='/'"></button>
+            </div>
+        </div>
+        <div class="window-body">
+            <p>Выберите <b>n</b>:</p>
+            <div class="buttons">
+                <button onclick="setNumber(1)">1</button>
+                <button onclick="setNumber(2)">2</button>
+                <button onclick="setNumber(3)">3</button>
+                <button onclick="setNumber(4)">4</button>
+                <button onclick="setNumber(5)">5</button>
+            </div>
+            <div class="output" id="output"></div>
+            <img src="{% static 'images/tasks/1/discr_meme.jpg' %}" class="fullscreen-image" id="fullscreenImage">
+        </div>
+    </div>
+    <script defer>
+
+        function setNumber(n) {
+            document.getElementById('hiddenFormInput1').value = n;
+            submitForm();
+        }
+
+        function submitForm(event) {
+            if (event) {
+                event.preventDefault();
+            }
+            const form = document.getElementById('hiddenForm');
+            const formData = new FormData(form);
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                }
+            })
+            .then(response => {
+                return response.json();
+            })
+            .then(data => {
+                document.getElementById('output').textContent=data.ans;
+            })
+
+        }
+        function toggleFullscreen() {
+            const windowElement = document.getElementById('mainWindow');
+            windowElement.classList.toggle('fullscreen');
+        }
+
+        const windowElement = document.getElementById("mainWindow");
+        const titleBar = document.getElementById("titleBar");
+        let isDragging = false;
+        let offsetX, offsetY;
+
+        titleBar.addEventListener("mousedown", (e) => {
+            if (!windowElement.classList.contains("fullscreen")) {
+                isDragging = true;
+                offsetX = e.clientX - windowElement.offsetLeft;
+                offsetY = e.clientY - windowElement.offsetTop;
+                windowElement.style.cursor = "grabbing";
+            }
+        });
+
+        document.addEventListener("mousemove", (e) => {
+            if (isDragging) {
+                windowElement.style.left = `${e.clientX - offsetX}px`;
+                windowElement.style.top = `${e.clientY - offsetY}px`;
+            }
+        });
+
+        document.addEventListener("mouseup", () => {
+            isDragging = false;
+            windowElement.style.cursor = "grab";
+        });
+    </script>
+</body>
+</html>
+
+
+
+<form action="{% url 'task_detail' pk=task.pk %}" method="post" id="hiddenForm">
+    {% csrf_token %}
+    <input type="text" id="hiddenFormInput1" name = "hiddenFormInput1">
+
+</form>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+
+{% block content %}
+    <body>
+    <h3>
+        Поздравляем, {{user.username}} !
+    </h3>
+    <table>
+        <tr>
+            <td>
+                <h2>
+                    Вы получили {{achievement}} !
+                </h2>
+            </td>
+                <td><img
+                    src = "{{achievement.copy_image_url}}"
+                    width="128"
+                    height="128"
+                    style="object-fit: cover;"
+                >
+            </td>
+        </tr>
+    </table>
+    <h3>
+        Возвращайтесь на BoolPlayground!
+    </h3>
+    </body>
+    </html>
+
+{% endblock content %}

@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Жадная раскраска графа</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        input, button {
+            padding: 8px 12px;
+            font-size: 16px;
+        }
+        button {
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        canvas {
+            border: 1px solid #ddd;
+            margin-top: 20px;
+        }
+        .info {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f8f8f8;
+            border-radius: 4px;
+        }
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 1px solid #333;
+        }
+        .current-vertex {
+            border: 3px solid #FF5722;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+    <h1>Жадная раскраска графа</h1>
+
+    <div class="controls">
+        <label for="vertexCount">Количество вершин:</label>
+        <input type="number" id="vertexCount" min="2" max="15" value="6">
+        <button id="buildGraph">Построить связный граф</button>
+        <button id="colorGraph" disabled>Раскрасить граф</button>
+    </div>
+
+    <canvas id="graphCanvas" width="800" height="500"></canvas>
+
+    <div id="colorLegend" class="legend" style="display: none;"></div>
+
+    <div id="info" class="info">
+        <p>1. Введите количество вершин (от 2 до 15)</p>
+        <p>2. Нажмите "Построить связный граф" для создания случайного графа</p>
+        <p>3. Нажмите "Раскрасить граф" для визуализации жадного алгоритма раскраски</p>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('graphCanvas');
+        const ctx = canvas.getContext('2d');
+        const vertexCountInput = document.getElementById('vertexCount');
+        const buildGraphBtn = document.getElementById('buildGraph');
+        const colorGraphBtn = document.getElementById('colorGraph');
+        const colorLegend = document.getElementById('colorLegend');
+        const infoDiv = document.getElementById('info');
+
+        let graph = [];
+        let vertices = [];
+        let colors = [];
+        let colorPalette = [];
+        let animation = null;
+        let currentStep = 0;
+        let coloringSteps = [];
+
+        // Инициализация
+        init();
+
+        function init() {
+            buildGraphBtn.addEventListener('click', buildRandomGraph);
+            colorGraphBtn.addEventListener('click', startColoring);
+
+            // Генерация цветовой палитры
+            colorPalette = generateColorPalette(20);
+        }
+
+        function buildRandomGraph() {
+            const vertexCount = parseInt(vertexCountInput.value);
+            if (vertexCount < 2 || vertexCount > 15) {
+                alert('Количество вершин должно быть от 2 до 15');
+                return;
+            }
+
+            // Остановить текущую анимацию, если есть
+            if (animation) {
+                clearInterval(animation);
+                animation = null;
+            }
+
+            // Сброс состояния
+            colors = Array(vertexCount).fill(-1);
+            currentStep = 0;
+            coloringSteps = [];
+            colorLegend.style.display = 'none';
+            colorGraphBtn.disabled = false;
+
+            // Генерация случайного связного графа (матрица смежности)
+            graph = Array(vertexCount).fill().map(() => Array(vertexCount).fill(0));
+
+            // 1. Сначала создаем остовное дерево, чтобы граф был связным
+            for (let i = 1; i < vertexCount; i++) {
+                const j = Math.floor(Math.random() * i);
+                graph[i][j] = 1;
+                graph[j][i] = 1;
+            }
+
+            // 2. Добавляем дополнительные ребра
+            const extraEdges = Math.floor(vertexCount * 1.5);
+            for (let e = 0; e < extraEdges; e++) {
+                const i = Math.floor(Math.random() * vertexCount);
+                const j = Math.floor(Math.random() * vertexCount);
+                if (i !== j && graph[i][j] === 0) {
+                    graph[i][j] = 1;
+                    graph[j][i] = 1;
+                }
+            }
+
+            // Генерация позиций вершин
+            vertices = generateVertexPositions(vertexCount);
+
+            drawGraph();
+            infoDiv.innerHTML = '<p>Граф построен. Нажмите "Раскрасить граф" для жадной раскраски.</p>';
+        }
+
+        function generateVertexPositions(vertexCount) {
+            const positions = [];
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = Math.min(canvas.width, canvas.height) * 0.4;
+
+            for (let i = 0; i < vertexCount; i++) {
+                const angle = (i * 2 * Math.PI / vertexCount) - Math.PI/2;
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                positions.push({x, y, radius: 20});
+            }
+
+            return positions;
+        }
+
+        function drawGraph(currentVertex = null) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Рисуем ребра
+            ctx.strokeStyle = '#888';
+            ctx.lineWidth = 2;
+
+            for (let i = 0; i < graph.length; i++) {
+                for (let j = i + 1; j < graph.length; j++) {
+                    if (graph[i][j] === 1) {
+                        ctx.beginPath();
+                        ctx.moveTo(vertices[i].x, vertices[i].y);
+                        ctx.lineTo(vertices[j].x, vertices[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            // Рисуем вершины
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            for (let i = 0; i < vertices.length; i++) {
+                const v = vertices[i];
+
+                // Выбираем цвет вершины
+                if (colors[i] !== -1) {
+                    ctx.fillStyle = colorPalette[colors[i]];
+                } else {
+                    ctx.fillStyle = '#dddddd';
+                }
+
+                // Рисуем вершину
+                ctx.beginPath();
+                ctx.arc(v.x, v.y, v.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Подсвечиваем текущую вершину
+                if (i === currentVertex) {
+                    ctx.strokeStyle = '#FF5722';
+                    ctx.lineWidth = 3;
+                } else {
+                    ctx.strokeStyle = '#333';
+                    ctx.lineWidth = 2;
+                }
+                ctx.stroke();
+
+                // Номер вершины
+                ctx.fillStyle = colors[i] !== -1 ? 'white' : 'black';
+                ctx.fillText(i.toString(), v.x, v.y);
+            }
+        }
+
+        function startColoring() {
+            if (graph.length === 0) {
+                alert('Сначала постройте граф');
+                return;
+            }
+
+            // Подготовка к раскраске
+            colors = Array(graph.length).fill(-1);
+            currentStep = 0;
+            colorGraphBtn.disabled = true;
+            buildGraphBtn.disabled = true;
+
+            // Генерируем шаги раскраски
+            coloringSteps = generateColoringSteps();
+
+            // Запускаем анимацию
+            animation = setInterval(animateColoring, 1000);
+
+            infoDiv.innerHTML = '<p>Жадная раскраска графа начата. Алгоритм последовательно раскрашивает вершины, используя минимально возможный цвет.</p>';
+        }
+
+        function generateColoringSteps() {
+            const steps = [];
+            const vertexOrder = Array.from({length: graph.length}, (_, i) => i);
+
+            // Раскрашиваем вершины в порядке их номеров
+            for (let i = 0; i < vertexOrder.length; i++) {
+                const v = vertexOrder[i];
+                const usedColors = new Set();
+
+                // Находим цвета всех смежных вершин
+                for (let j = 0; j < graph.length; j++) {
+                    if (graph[v][j] === 1 && colors[j] !== -1) {
+                        usedColors.add(colors[j]);
+                    }
+                }
+
+                // Находим минимальный доступный цвет
+                let color;
+                for (color = 0; color < colorPalette.length; color++) {
+                    if (!usedColors.has(color)) break;
+                }
+
+                // Сохраняем шаг раскраски
+                steps.push({
+                    vertex: v,
+                    color: color,
+                    message: `Вершина ${v}: назначен цвет ${color + 1} (минимальный доступный)`,
+                    usedColors: Array.from(usedColors)
+                });
+
+                // Применяем цвет сразу для генерации следующих шагов
+                colors[v] = color;
+            }
+
+            return steps;
+        }
+
+        function animateColoring() {
+            if (currentStep >= coloringSteps.length) {
+                clearInterval(animation);
+                animation = null;
+                buildGraphBtn.disabled = false;
+                updateColorLegend();
+                infoDiv.innerHTML += `<p>Раскраска завершена. Использовано ${new Set(colors).size} цветов.</p>`;
+                return;
+            }
+
+            const step = coloringSteps[currentStep];
+            colors[step.vertex] = step.color;
+
+            drawGraph(step.vertex);
+
+            let message = step.message;
+            if (step.usedColors.length > 0) {
+                message += `<br>Занятые цвета соседей: ${step.usedColors.map(c => c + 1).join(', ')}`;
+            }
+
+            infoDiv.innerHTML = `<p>${message}</p>`;
+            updateColorLegend();
+
+            currentStep++;
+        }
+
+        function updateColorLegend() {
+            colorLegend.innerHTML = '';
+            colorLegend.style.display = 'flex';
+
+            const usedColors = new Set(colors.filter(c => c !== -1));
+            const sortedColors = Array.from(usedColors).sort((a, b) => a - b);
+
+            for (const color of sortedColors) {
+                const item = document.createElement('div');
+                item.className = 'legend-item';
+
+                const colorBox = document.createElement('div');
+                colorBox.className = 'legend-color';
+                colorBox.style.backgroundColor = colorPalette[color];
+
+                const label = document.createElement('div');
+                label.textContent = `Цвет ${color + 1}`;
+
+                item.appendChild(colorBox);
+                item.appendChild(label);
+                colorLegend.appendChild(item);
+            }
+        }
+
+        function generateColorPalette(count) {
+            const palette = [];
+            const hueStep = 360 / count;
+
+            for (let i = 0; i < count; i++) {
+                const hue = i * hueStep;
+                palette.push(`hsl(${hue}, 70%, 60%)`);
+            }
+
+            return palette;
+        }
+    </script>
+</body>
+</html>

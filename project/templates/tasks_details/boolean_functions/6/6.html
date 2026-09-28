@@ -1,0 +1,302 @@
+{% include 'template_title.html' %}
+{% include 'flatpages/default.html' %}
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>test6</title>
+    {% load static %}
+    <link rel="stylesheet" href= "{% static 'images/tasks/6/xterm.css' %}" >
+
+    {% block title %}
+        <center>
+            <h3>
+                {{task.title}}
+            </h3>
+        </center>
+    {% endblock title %}
+
+</head>
+
+
+{% block content %}
+<body>
+<h4>{{task.description}}</h4>
+    <button class="openTerminal" onclick="openTerminal()">Открыть консоль</button>
+    <div id="terminalModal" class="modal">
+        <div class="terminal-container" id="terminal"></div>
+    </div>
+
+    {% if user.is_authenticated %}
+        {% load socialaccount %}
+        {% get_social_accounts user as user_social_accounts %}
+        {% with authenticate_with_google=user_social_accounts.google %}
+            {% if authenticate_with_google %}
+                <input type = "text" value = "True" id = "auth_with_google">
+            {% endif %}
+        {% endwith %}
+    {% endif %}
+
+
+    <script src=" {% static 'images/tasks/6/xterm.js' %}"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+        const homeButton = document.getElementById('home-button');
+    let term;
+    let step = 0;
+    let num;
+    let username = "{{user.username}}";//вставить реальное имя пользователя
+    let userInput;
+    let cnt=0;
+    let is_authenticated = "{{user.is_authenticated}}".toLowerCase()==="true" ? true : false
+    let authenticate_with_google = false;
+    if (document.getElementById("auth_with_google")){
+        authenticate_with_google = true;
+    }
+
+    function openTerminal() {
+    homeButton.style.display="none";
+    document.getElementById("terminalModal").style.display = "flex";
+    if (!term) {
+        if (typeof Terminal === "undefined") {
+            console.error("Ошибка: Xterm.js не загружен.");
+            return;
+        }
+
+        term = new Terminal();
+        term.open(document.getElementById("terminal"));
+6
+        term.prompt = () => term.write(`\r\n\x1b[32m${username}@i-love-imit-isu:\x1b[0m~$ `);
+
+        term.prompt();
+        term.onData(handleInput);
+    }
+}
+
+    function closeTerminal(event) {
+        homeButton.style.display="";
+        if (event.target.id === "terminalModal") {
+            document.getElementById("terminalModal").style.display = "none";
+            term.clear();
+            term.dispose();
+            term = null;
+            step = 0;
+            cnt=0;
+        }
+    }
+
+    let currentInput = "";
+
+    function handleInput(data) {
+        if (data.charCodeAt(0) === 13) {
+            term.write("\r\n");
+            let command = currentInput.trim();
+            console.log("User entered command:", command);
+            processCommand(command);
+            currentInput = "";
+        } else if (data.charCodeAt(0) === 127) {
+            if (currentInput.length > 0) {
+                currentInput = currentInput.slice(0, -1);
+                term.write("\b \b");
+            }
+        } else {
+            currentInput += data;
+            if(step === 1)
+            {
+                term.write('*');
+            }
+            else term.write(data);
+        }
+    }
+
+    function processCommand(command) {
+    command = command.trim();
+
+    if (step === 0) {
+        if (command === "--help") {
+            term.write("\r\nto solve the task enter \"sudo solve -task=6\"");
+            term.write("\r\ninput format: x1,x2,x3,&,|,~x1,~x2,~x3");
+            term.write("\r\nto exit enter \"kill\"\r\n");
+            term.prompt();
+        }
+        else if (command === "sudo solve -task=6" && !is_authenticated) {
+            term.write("\r\nYou are need to log in!\r\n");
+            term.prompt();
+        }
+        else if (command === "sudo solve -task=6" && cnt==0 && !authenticate_with_google) {
+            step = 1;
+            term.write(`\r\nenter the password for ${username}: \r\n`);
+        } else if (command === "sudo solve -task=6" ) {
+            num = Math.floor(Math.random() * 256).toString(2).padStart(8, '0');
+            step = 2;
+            term.write("\r\n"+num+"\r\n");
+            term.write("\r\nenter DNF:\r\n");
+        } else if (command === "kill") {
+            currentInput = "";
+            closeTerminal({ target: { id: "terminalModal" } });
+        } else {
+            term.write("\r\nunknown command. Maybe you meant: --help\r\n");
+            term.prompt();
+        }
+    } else if (step === 1) {
+        let password=currentInput;
+
+        const form = document.getElementById('password_hidden_form');
+        document.getElementById('password_hidden_form').children[1].value = password;
+        const formData = new FormData(form);
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.passw_current_or_not){
+                num = Math.floor(Math.random() * 256).toString(2).padStart(8, '0');
+                cnt++;
+                step = 2;
+                term.write("\r\n"+num+"\r\n");
+                term.write("\r\nenter DNF:\r\n");
+            }
+            else{
+                step=0;
+                term.write("\r\npassword incorrect\r\n");
+                term.prompt();
+            }
+        })
+    } else if (step === 2) {
+        document.getElementById('hiddenFormInput1').value = num;
+        document.getElementById('hiddenFormInput2').value = currentInput.replace(/ /g, '');
+        console.log(document.getElementById('hiddenFormInput1').value);
+        console.log(document.getElementById('hiddenFormInput2').value);
+        submitForm();
+    }
+}
+
+function submitForm(event) {
+        if (event) {
+            event.preventDefault();
+        }
+        const form = document.getElementById('hiddenForm');
+        const formData = new FormData(form);
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.is_dnf=="Error: invalid expression"){
+                term.write("\r\nError: invalid expression\r\n");
+            }
+            else if (data.is_dnf){
+                term.write("\r\nYou are right!\r\n");
+            }
+            else{
+                term.write("\r\nYou are wrong...\r\n");
+            }
+            step=0;
+            term.prompt();
+        })
+        //step=0;
+        //term.prompt();
+    }
+    window.openTerminal = openTerminal;
+    window.closeTerminal = closeTerminal;
+});
+    </script>
+
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+        }
+        .terminal-container {
+            width: 710px;
+            height: 400px;
+            background: black;
+            padding: 10px;
+        }
+        #hiddenForm{
+            display: none;
+        }
+
+        #password_hidden_form{
+            display: none;
+        }
+        #auth_with_google{
+            display: none;
+        }
+        .openTerminal{
+            background-color: #3498db;
+        color: white;
+        font-size: 16px;
+        padding: 12px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background 0.3s;
+        }
+        .openTerminal:hover{
+            background-color: #2980b9;
+        }
+        .home-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background-color: #3498db;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background 0.3s, transform 0.2s;
+        }
+        .home-button img {
+            width: 24px;
+            height: 24px;
+            filter: invert(1);
+        }
+        .home-button:hover {
+            background-color: #2980b9;
+            transform: scale(1.1);
+        }
+    </style>
+
+<a href="/?page={{page_obj.number}}" class="home-button" id="home-button">
+        <img src="https://cdn-icons-png.flaticon.com/512/25/25694.png" alt="Home">
+</a>
+</body>
+
+</html>
+
+<form action="{% url 'task_detail' pk=task.pk %}" method="post" id="hiddenForm">
+    {% csrf_token %}
+    <input type="text" id="hiddenFormInput1" name = "binary_function">
+    <input type="text" id="hiddenFormInput2" name = "user_dnf">
+</form>
+
+
+<form action="{% url 'task_detail' pk=task.pk %}" method="post" id="password_hidden_form">
+    {% csrf_token %}
+    <input type="text" id="user_input_password" name = "input_password">
+</form>
+
+
+{% endblock content %}

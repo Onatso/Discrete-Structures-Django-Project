@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Графы</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        #main-container {
+            display: flex;
+            gap: 20px;
+        }
+        #controls {
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        button {
+            padding: 8px 12px;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            background: white;
+            border-radius: 4px;
+        }
+        button.active {
+            background-color: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+        button#clear-all {
+            background-color: #f44336;
+            color: white;
+            border-color: #f44336;
+            margin-left: auto;
+        }
+        #svg-container {
+            border: 1px solid #ccc;
+            width: 1280px;
+            height: 720px;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+        #adjacency-container {
+            border: 1px solid #ccc;
+            padding: 15px;
+            width: 300px;
+            height: 690px;
+            overflow-y: auto;
+        }
+        .adjacency-list {
+            margin-bottom: 20px;
+        }
+        .adjacency-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #3498db;
+        }
+        .adjacency-item {
+            margin-left: 20px;
+            margin-bottom: 3px;
+        }
+        .vertex {
+            cursor: default;
+        }
+        .vertex-text {
+            font-size: 12px;
+            text-anchor: middle;
+            pointer-events: none;
+            user-select: none;
+        }
+        .edge {
+            stroke: #333;
+            stroke-width: 2;
+            cursor: pointer;
+            fill: none;
+        }
+        .control-point {
+            fill: #FF9800;
+            r: 5;
+            opacity: 0;
+            cursor: move;
+            transition: opacity 0.2s;
+        }
+        .edge-group:hover .control-point {
+            opacity: 1;
+        }
+        #prufer-code:hover {
+            background-color: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+        @keyframes highlight {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        .highlight-animation {
+            animation: highlight 1.5s ease-in-out;
+        }
+        .home-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background-color: #3498db;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background 0.3s, transform 0.2s;
+        }
+        .home-button img {
+            width: 24px;
+            height: 24px;
+            filter: invert(1);
+        }
+        .home-button:hover {
+            background-color: #2980b9;
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+    <h1>Графы</h1>
+    <div id="controls">
+        <button id="mode-vertex" class="active">Добавление вершин</button>
+        <button id="mode-edge">Добавление ребер</button>
+        <button id="mode-drag">Перетаскивание(?)</button>
+        <button id="mode-delete">Удаление</button>
+        <button id="prufer-code">Кодирование Прюфера</button>
+        <div id="prufer-result" style="margin-top: 10px; font-weight: bold;"></div>
+        <button id="clear-all">Очистить граф</button>
+    </div>
+    <div id="main-container">
+        <div id="svg-container">
+            <svg id="graph-svg" width="100%" height="100%"></svg>
+        </div>
+        <div id="adjacency-container">
+            <h3>Списки смежности</h3>
+            <div id="adjacency-lists"></div>
+        </div>
+    </div>
+    <a href="/" class="home-button">
+        <img src="https://cdn-icons-png.flaticon.com/512/25/25694.png" alt="Home">
+    </a>
+
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+            const svg = document.getElementById('graph-svg');
+            const vertexBtn = document.getElementById('mode-vertex');
+            const edgeBtn = document.getElementById('mode-edge');
+            const dragBtn = document.getElementById('mode-drag');
+            const deleteBtn = document.getElementById('mode-delete');
+            const clearAllBtn = document.getElementById('clear-all');
+            const adjacencyListsContainer = document.getElementById('adjacency-lists');
+
+            let currentMode = 'vertex';
+            let vertexCount = 0;
+            let selectedVertices = [];
+            let vertices = [];
+            let edges = [];
+            let dragData = null;
+
+            let scale = 1;
+            const scaleStep = 0.1;
+            let viewBox = {
+                x: 0,
+                y: 0,
+                width: svg.width.baseVal.value,
+                height: svg.height.baseVal.value
+            };
+            let isPanning = false;
+            let panStart = { x: 0, y: 0 };
+
+            svg.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`);
+
+            function setMode(mode) {
+                currentMode = mode;
+                vertexBtn.classList.remove('active');
+                edgeBtn.classList.remove('active');
+                dragBtn.classList.remove('active');
+                deleteBtn.classList.remove('active');
+
+                resetVertexSelection();
+                selectedVertices = [];
+
+                switch(mode) {
+                    case 'vertex':
+                        vertexBtn.classList.add('active');
+                        break;
+                    case 'edge':
+                        edgeBtn.classList.add('active');
+                        break;
+                    case 'drag':
+                        dragBtn.classList.add('active');
+                        break;
+                    case 'delete':
+                        deleteBtn.classList.add('active');
+                        break;
+                }
+            }
+
+            function resetVertexSelection() {
+                selectedVertices.forEach(v => {
+                    v.circle.setAttribute('fill', '#3498db');
+                });
+            }
+
+            function updateAdjacencyLists() {
+                adjacencyListsContainer.innerHTML = '';
+
+                const adjacencyList = {};
+                vertices.forEach(vertex => {
+                    adjacencyList[vertex.number] = [];
+                });
+
+                edges.forEach(edge => {
+                    const v1 = vertices.find(v => v.id === edge.v1);
+                    const v2 = vertices.find(v => v.id === edge.v2);
+                    if (v1 && v2) {
+                        adjacencyList[v1.number].push(v2.number);
+                        adjacencyList[v2.number].push(v1.number);
+                    }
+                });
+
+                for (const vertex in adjacencyList) {
+                    adjacencyList[vertex] = [...new Set(adjacencyList[vertex])];
+                    adjacencyList[vertex].sort((a, b) => a - b);
+                }
+
+                const sortedVertices = Object.keys(adjacencyList).sort((a, b) => a - b);
+                for (const vertex of sortedVertices) {
+                    const listContainer = document.createElement('div');
+                    listContainer.className = 'adjacency-list';
+
+                    const title = document.createElement('div');
+                    title.className = 'adjacency-title';
+                    title.textContent = `Вершина ${vertex}:`;
+                    listContainer.appendChild(title);
+
+                    if (adjacencyList[vertex].length === 0) {
+                        const item = document.createElement('div');
+                        item.className = 'adjacency-item';
+                        item.textContent = 'Нет связей';
+                        listContainer.appendChild(item);
+                    } else {
+                        adjacencyList[vertex].forEach(adjVertex => {
+                            const item = document.createElement('div');
+                            item.className = 'adjacency-item';
+                            item.textContent = `→ Вершина ${adjVertex}`;
+                            listContainer.appendChild(item);
+                        });
+                    }
+
+                    adjacencyListsContainer.appendChild(listContainer);
+                }
+            }
+
+            svg.addEventListener('wheel', function(e) {
+                e.preventDefault();
+
+                const delta = e.deltaY > 0 ? -1 : 1;
+                const zoomIn = delta > 0;
+
+                const rect = svg.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+
+                const x = viewBox.x + mouseX * (viewBox.width / rect.width);
+                const y = viewBox.y + mouseY * (viewBox.height / rect.height);
+
+                const oldScale = scale;
+                scale = zoomIn ? scale * (1 + scaleStep) : scale / (1 + scaleStep);
+
+                if (scale === oldScale) return;
+
+                const factor = scale / oldScale;
+                const newWidth = viewBox.width / factor;
+                const newHeight = viewBox.height / factor;
+
+                const newX = x - (mouseX / rect.width) * newWidth;
+                const newY = y - (mouseY / rect.height) * newHeight;
+
+                viewBox = {
+                    x: newX,
+                    y: newY,
+                    width: newWidth,
+                    height: newHeight
+                };
+
+                svg.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`);
+            });
+
+            svg.addEventListener('mousedown', function(e) {
+                if (e.button === 2) {
+                    e.preventDefault();
+                    isPanning = true;
+                    panStart = {
+                        x: e.clientX,
+                        y: e.clientY
+                    };
+
+                    svg.style.cursor = 'grabbing';
+                }
+            });
+
+            document.addEventListener('mouseup', function(e) {
+                if (isPanning) {
+                    isPanning = false;
+                    svg.style.cursor = '';
+                }
+            });
+
+            document.addEventListener('mousemove', function(e) {
+                if (isPanning) {
+                    e.preventDefault();
+
+                    const dx = e.clientX - panStart.x;
+                    const dy = e.clientY - panStart.y;
+
+                    panStart = {
+                        x: e.clientX,
+                        y: e.clientY
+                    };
+
+                    const rect = svg.getBoundingClientRect();
+                    const dxView = dx * (viewBox.width / rect.width);
+                    const dyView = dy * (viewBox.height / rect.height);
+
+                    viewBox.x -= dxView;
+                    viewBox.y -= dyView;
+
+                    svg.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`);
+                }
+            });
+
+            svg.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+            });
+
+            svg.addEventListener('click', function(e) {
+                if (e.target === svg && currentMode === 'vertex' && e.button === 0) {
+                    const rect = svg.getBoundingClientRect();
+                    const mouseX = e.clientX - rect.left;
+                    const mouseY = e.clientY - rect.top;
+
+                    const x = viewBox.x + mouseX * (viewBox.width / rect.width);
+                    const y = viewBox.y + mouseY * (viewBox.height / rect.height);
+
+                    createVertex(x, y);
+                }
+            });
+
+            function createVertex(x, y) {
+                vertexCount++;
+                const vertexId = `vertex-${Date.now()}-${vertexCount}`;
+
+                const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                group.setAttribute('class', 'vertex');
+                group.dataset.id = vertexId;
+
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', x);
+                circle.setAttribute('cy', y);
+                circle.setAttribute('r', 20);
+                circle.setAttribute('fill', '#3498db');
+                circle.setAttribute('stroke', '#333');
+                circle.setAttribute('stroke-width', '2');
+
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', x);
+                text.setAttribute('y', y + 5);
+                text.setAttribute('class', 'vertex-text');
+                text.textContent = vertexCount;
+
+                group.appendChild(circle);
+                group.appendChild(text);
+                svg.appendChild(group);
+
+                group.addEventListener('mousedown', startDrag);
+                group.addEventListener('click', function(e) {
+                    handleVertexClick(vertexId, circle);
+                });
+
+                const vertex = {
+                    id: vertexId,
+                    number: vertexCount,
+                    x: x,
+                    y: y,
+                    circle: circle,
+                    text: text,
+                    group: group
+                };
+
+                vertices.push(vertex);
+                updateAdjacencyLists();
+                return vertex;
+            }
+
+            function handleVertexClick(vertexId, circle) {
+                const vertex = vertices.find(v => v.id === vertexId);
+                if (!vertex) return;
+
+                if (currentMode === 'vertex') {
+                    return;
+                } else if (currentMode === 'edge') {
+                    selectedVertices.push(vertex);
+                    circle.setAttribute('fill', '#FF9800');
+
+                    if (selectedVertices.length === 2) {
+                        createEdge(selectedVertices[0], selectedVertices[1]);
+                        resetVertexSelection();
+                        selectedVertices = [];
+                    }
+                } else if (currentMode === 'delete') {
+                    deleteVertex(vertexId);
+                }
+            }
+
+            function createEdge(vertex1, vertex2) {
+                if (!vertex1 || !vertex2 || vertex1.id === vertex2.id) return;
+
+                const edgeExists = edges.some(edge =>
+                    (edge.v1 === vertex1.id && edge.v2 === vertex2.id) ||
+                    (edge.v1 === vertex2.id && edge.v2 === vertex1.id)
+                );
+
+                if (edgeExists) return;
+
+                const edgeId = `edge-${vertex1.id}-${vertex2.id}`;
+
+                const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                group.setAttribute('class', 'edge-group');
+                group.dataset.id = edgeId;
+
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('class', 'edge');
+                path.setAttribute('d', `M${vertex1.x},${vertex1.y} L${vertex2.x},${vertex2.y}`);
+
+                const midX = (vertex1.x + vertex2.x) / 2;
+                const midY = (vertex1.y + vertex2.y) / 2;
+
+                const controlPoint = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                controlPoint.setAttribute('class', 'control-point');
+                controlPoint.setAttribute('cx', midX);
+                controlPoint.setAttribute('cy', midY);
+                controlPoint.setAttribute('r', 5);
+
+                group.appendChild(path);
+                group.appendChild(controlPoint);
+                svg.insertBefore(group, svg.firstChild);
+
+                path.addEventListener('click', function(e) {
+                    if (currentMode === 'delete') {
+                        deleteEdge(edgeId);
+                    }
+                });
+
+                controlPoint.addEventListener('mousedown', function(e) {
+                    startDragControlPoint(e, edgeId);
+                });
+
+                edges.push({
+                    id: edgeId,
+                    v1: vertex1.id,
+                    v2: vertex2.id,
+                    path: path,
+                    controlPoint: controlPoint,
+                    group: group,
+                    isCurved: false,
+                    controlX: midX,
+                    controlY: midY
+                });
+
+                updateAdjacencyLists();
+            }
+
+            function updateEdgePath(edge) {
+                const v1 = vertices.find(v => v.id === edge.v1);
+                const v2 = vertices.find(v => v.id === edge.v2);
+
+                if (!v1 || !v2) {
+                    deleteEdge(edge.id);
+                    return;
+                }
+
+                if (edge.isCurved) {
+                    edge.path.setAttribute('d',
+                        `M${v1.x},${v1.y} Q${edge.controlX},${edge.controlY} ${v2.x},${v2.y}`);
+                    edge.controlPoint.setAttribute('cx', edge.controlX);
+                    edge.controlPoint.setAttribute('cy', edge.controlY);
+                } else {
+                    edge.path.setAttribute('d', `M${v1.x},${v1.y} L${v2.x},${v2.y}`);
+                }
+            }
+
+            function deleteVertex(vertexId) {
+                const edgesToRemove = edges.filter(edge =>
+                    edge.v1 === vertexId || edge.v2 === vertexId
+                );
+
+                edgesToRemove.forEach(edge => {
+                    svg.removeChild(edge.group);
+                });
+
+                edges = edges.filter(edge =>
+                    edge.v1 !== vertexId && edge.v2 !== vertexId
+                );
+
+                const vertexIndex = vertices.findIndex(v => v.id === vertexId);
+                if (vertexIndex !== -1) {
+                    svg.removeChild(vertices[vertexIndex].group);
+                    vertices.splice(vertexIndex, 1);
+                }
+
+                updateAdjacencyLists();
+            }
+
+            function deleteEdge(edgeId) {
+                const edgeIndex = edges.findIndex(e => e.id === edgeId);
+                if (edgeIndex !== -1) {
+                    svg.removeChild(edges[edgeIndex].group);
+                    edges.splice(edgeIndex, 1);
+                    updateAdjacencyLists();
+                }
+            }
+
+            function clearGraph() {
+                vertices.forEach(vertex => {
+                    svg.removeChild(vertex.group);
+                });
+
+                edges.forEach(edge => {
+                    svg.removeChild(edge.group);
+                });
+
+                vertices = [];
+                edges = [];
+                vertexCount = 0;
+                selectedVertices = [];
+
+                scale = 1;
+                viewBox = {
+                    x: 0,
+                    y: 0,
+                    width: svg.width.baseVal.value,
+                    height: svg.height.baseVal.value
+                };
+                svg.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`);
+                const resultDiv = document.getElementById('prufer-result');
+                resultDiv.textContent = '';
+
+                updateAdjacencyLists();
+            }
+
+            function startDrag(e) {
+                if (currentMode !== 'drag' || e.button !== 0) return;
+
+                const group = e.currentTarget;
+                const vertexId = group.dataset.id;
+                const vertex = vertices.find(v => v.id === vertexId);
+                if (!vertex) return;
+
+                const rect = svg.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+
+                const x = viewBox.x + mouseX * (viewBox.width / rect.width);
+                const y = viewBox.y + mouseY * (viewBox.height / rect.height);
+
+                dragData = {
+                    type: 'vertex',
+                    target: vertex,
+                    offsetX: x - vertex.x,
+                    offsetY: y - vertex.y
+                };
+
+                document.addEventListener('mousemove', drag);
+                document.addEventListener('mouseup', stopDrag);
+            }
+
+            function startDragControlPoint(e, edgeId) {
+                if (currentMode !== 'drag' || e.button !== 0) return;
+
+                const edge = edges.find(e => e.id === edgeId);
+                if (!edge) return;
+
+                if (!edge.isCurved) {
+                    edge.isCurved = true;
+                    const v1 = vertices.find(v => v.id === edge.v1);
+                    const v2 = vertices.find(v => v.id === edge.v2);
+                    if (v1 && v2) {
+                        edge.controlX = (v1.x + v2.x) / 2;
+                        edge.controlY = (v1.y + v2.y) / 2;
+                    }
+                }
+
+                const rect = svg.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+
+                const x = viewBox.x + mouseX * (viewBox.width / rect.width);
+                const y = viewBox.y + mouseY * (viewBox.height / rect.height);
+
+                dragData = {
+                    type: 'controlPoint',
+                    target: edge,
+                    offsetX: x - edge.controlX,
+                    offsetY: y - edge.controlY
+                };
+
+                document.addEventListener('mousemove', drag);
+                document.addEventListener('mouseup', stopDrag);
+            }
+
+            // Перетаскивание
+            function drag(e) {
+                if (!dragData) return;
+
+                const rect = svg.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+
+                const x = viewBox.x + mouseX * (viewBox.width / rect.width);
+                const y = viewBox.y + mouseY * (viewBox.height / rect.height);
+
+                if (dragData.type === 'vertex') {
+                    const vertex = dragData.target;
+                    const newX = x - dragData.offsetX;
+                    const newY = y - dragData.offsetY;
+
+                    vertex.x = newX;
+                    vertex.y = newY;
+                    vertex.circle.setAttribute('cx', newX);
+                    vertex.circle.setAttribute('cy', newY);
+                    vertex.text.setAttribute('x', newX);
+                    vertex.text.setAttribute('y', newY + 5);
+
+                    edges.forEach(edge => {
+                        if (edge.v1 === vertex.id || edge.v2 === vertex.id) {
+                            updateEdgePath(edge);
+                        }
+                    });
+                }
+                else if (dragData.type === 'controlPoint') {
+                    const edge = dragData.target;
+                    edge.controlX = x - dragData.offsetX;
+                    edge.controlY = y - dragData.offsetY;
+                    edge.isCurved = true;
+                    updateEdgePath(edge);
+                }
+            }
+
+            function stopDrag() {
+                document.removeEventListener('mousemove', drag);
+                document.removeEventListener('mouseup', stopDrag);
+                dragData = null;
+            }
+
+            document.getElementById('prufer-code').addEventListener('click', async function() {
+                const resultDiv = document.getElementById('prufer-result');
+                resultDiv.textContent = '';
+                resultDiv.style.color = 'black';
+
+                if (!isTree()) {
+                    resultDiv.textContent = 'Ошибка: граф не является деревом';
+                    resultDiv.style.color = 'red';
+                    return;
+                }
+
+                if (!validateVertexNumbering()) {
+                    resultDiv.textContent = 'Ошибка: вершины должны быть пронумерованы от 1 до n без пропусков';
+                    resultDiv.style.color = 'red';
+                    return;
+                }
+
+                // Копируем структуру графа для работы
+                const edgesCopy = JSON.parse(JSON.stringify(edges));
+                const verticesCopy = JSON.parse(JSON.stringify(vertices));
+
+                const code = [];
+                const n = vertices.length;
+
+                await highlightTree();
+
+                for (let i = 0; i < n - 2; i++) {
+                    const leaf = findMinLeaf(edgesCopy, verticesCopy);
+                    if (!leaf) break;
+
+                    const neighbor = findNeighbor(leaf, edgesCopy);
+
+                    code.push(neighbor.number);
+
+                    await highlightStep(leaf, neighbor, code.join(', '));
+
+                    removeLeaf(leaf, edgesCopy);
+                }
+
+                resultDiv.textContent = `Код Прюфера: [${code.join(', ')}]`;
+                sleep(5000);
+                vertices.forEach(v => {
+                    v.circle.setAttribute('fill', '#3498db');
+                    v.text.setAttribute('fill', 'black');
+                });
+            });
+
+            function isTree() {
+                return edges.length === vertices.length - 1 && isConnected();
+            }
+
+            function isConnected() {
+                if (vertices.length === 0) return false;
+
+                const visited = new Set();
+                const queue = [vertices[0].id];
+
+                while (queue.length) {
+                    const current = queue.shift();
+                    visited.add(current);
+
+                    edges.forEach(edge => {
+                        if (edge.v1 === current && !visited.has(edge.v2)) {
+                            queue.push(edge.v2);
+                        }
+                        if (edge.v2 === current && !visited.has(edge.v1)) {
+                            queue.push(edge.v1);
+                        }
+                    });
+                }
+
+                return visited.size === vertices.length;
+            }
+
+            function validateVertexNumbering() {
+                const numbers = vertices.map(v => v.number).sort((a, b) => a - b);
+                for (let i = 0; i < numbers.length; i++) {
+                    if (numbers[i] !== i + 1) return false;
+                }
+                return true;
+            }
+
+            function findMinLeaf(edges, vertices) {
+                const degree = {};
+                vertices.forEach(v => degree[v.id] = 0);
+
+                edges.forEach(edge => {
+                    degree[edge.v1]++;
+                    degree[edge.v2]++;
+                });
+
+                const leaves = vertices.filter(v => degree[v.id] === 1);
+                if (leaves.length === 0) return null;
+
+                return leaves.reduce((min, leaf) => leaf.number < min.number ? leaf : min);
+            }
+
+            function findNeighbor(leaf, edges) {
+                for (const edge of edges) {
+                    if (edge.v1 === leaf.id) {
+                        return vertices.find(v => v.id === edge.v2);
+                    }
+                    if (edge.v2 === leaf.id) {
+                        return vertices.find(v => v.id === edge.v1);
+                    }
+                }
+                return null;
+            }
+
+            function removeLeaf(leaf, edges) {
+                for (let i = edges.length - 1; i >= 0; i--) {
+                    if (edges[i].v1 === leaf.id || edges[i].v2 === leaf.id) {
+                        edges.splice(i, 1);
+                    }
+                }
+            }
+
+            async function highlightTree() {
+                vertices.forEach(v => {
+                    v.circle.setAttribute('fill', '#3498db');
+                    v.text.setAttribute('fill', 'white');
+                });
+
+                edges.forEach(e => {
+                    e.path.setAttribute('stroke', '#999');
+                    if (e.weightText) e.weightText.setAttribute('fill', 'red');
+                });
+
+                await sleep(1000);
+            }
+
+            async function highlightStep(leaf, neighbor, currentCode) {
+                const leafElement = vertices.find(v => v.id === leaf.id);
+                leafElement.circle.setAttribute('fill', '#e74c3c');
+                leafElement.text.setAttribute('fill', 'white');
+
+                const neighborElement = vertices.find(v => v.id === neighbor.id);
+                neighborElement.circle.setAttribute('fill', '#2ecc71');
+                neighborElement.text.setAttribute('fill', 'white');
+
+                const edge = edges.find(e =>
+                    (e.v1 === leaf.id && e.v2 === neighbor.id) ||
+                    (e.v1 === neighbor.id && e.v2 === leaf.id));
+                if (edge) {
+                    edge.path.setAttribute('stroke', '#f39c12');
+                    edge.path.setAttribute('stroke-width', '3');
+                }
+
+                const resultDiv = document.getElementById('prufer-result');
+                resultDiv.textContent = `Текущий код: [${currentCode}]`;
+                resultDiv.style.color = 'black';
+
+                await sleep(1500);
+
+                leafElement.circle.setAttribute('fill', '#95a5a6');
+                leafElement.text.setAttribute('fill', 'black');
+            }
+
+            function sleep(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+
+            vertexBtn.addEventListener('click', () => setMode('vertex'));
+            edgeBtn.addEventListener('click', () => setMode('edge'));
+            dragBtn.addEventListener('click', () => setMode('drag'));
+            deleteBtn.addEventListener('click', () => setMode('delete'));
+            clearAllBtn.addEventListener('click', clearGraph);
+
+            setMode('vertex');
+});
+    </script>
+</body>
+</html>

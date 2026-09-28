@@ -1,0 +1,838 @@
+{% include 'flatpages/default.html' %}
+
+<title > Комментарии к задаче </title>
+
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        background-color: #f5f7fa;
+        color: #333;
+    }
+
+    center h1 {
+        color: #3398d9;
+        margin: 2rem 0;
+        font-size: 2.2em;
+        border-bottom: 3px solid #3398d9;
+        padding-bottom: 0.5rem;
+        display: inline-block;
+    }
+
+    #information_1, #information_2 {
+        font-size: 0.9em;
+        margin: 0 10px;
+        padding: 5px 10px;
+        border-radius: 15px;
+        background: #f0f8ff;
+    }
+
+    form {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin: 2rem 0;
+    }
+
+    #input {
+        width: 100%;
+        min-height: 100px;
+        padding: 1rem;
+        border: 2px solid #e0e7f1;
+        border-radius: 8px;
+        margin: 1rem 0;
+        font-size: 1em;
+        resize: vertical;
+    }
+
+    #submit {
+        background: #3398d9;
+        color: white;
+        border: none;
+        padding: 0.8rem 2rem;
+        border-radius: 25px;
+        font-size: 1em;
+        cursor: pointer;
+        transition: background 0.3s ease;
+    }
+
+    #submit:hover {
+        background: #2878ad;
+    }
+
+    .main fieldset {
+        border: none;
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+
+    legend span:first-child {
+        color: #3398d9;
+        font-size: 1.1em;
+    }
+
+    legend span:last-child {
+        color: #666;
+        font-size: 0.9em;
+    }
+
+    .comment_text {
+        color: #444;
+        margin: 1rem 0;
+        padding: 1rem;
+        background: #f8f9fb;
+        border-radius: 8px;
+    }
+
+    #teacher_answer_text,
+    #admin_answer_text {
+        display: block;
+        margin: 1rem 0;
+        padding: 1rem;
+        border-radius: 8px;
+        font-style: italic;
+    }
+
+    #teacher_answer_text {
+        background: #fee;
+        border-left: 4px solid #ff4444;
+    }
+
+    #admin_answer_text {
+        background: #eef7ff;
+        border-left: 4px solid #3398d9;
+    }
+
+    button {
+        padding: 0.6rem 1.2rem;
+        margin: 0.5rem 0.5rem 0 0;
+        border: none;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 0.9em;
+    }
+
+    .edit-comment {
+        background: #e8f3ff;
+        color: #3398d9;
+    }
+
+    .delete-comment {
+        background: #ffe8e8;
+        color: #ff4444;
+    }
+
+    #admin-teacher-answer {
+        background: #e8ffe8;
+        color: #2ecc71;
+    }
+
+    .modal-content,
+    .modal-delete {
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .modal-content h4,
+    .modal-delete h4 {
+        color: #3398d9;
+        margin-bottom: 1.5rem;
+    }
+
+    .modal-content textarea {
+        border: 2px solid #e0e7f1;
+        border-radius: 8px;
+        padding: 1rem;
+    }
+
+    .modal-content button[type="submit"] {
+        background: #3398d9;
+        color: white;
+        margin-top: 1rem;
+    }
+     #task_id{
+        display: none;
+    }
+      #edit-modal {
+        display: none;
+        position: fixed;
+        z-index: 100;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.4);
+    }
+      #delete-modal {
+        display: none;
+        position: fixed;
+        z-index: 100;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.4);
+    }
+     #answer-modal {
+        display: none;
+        position: fixed;
+        z-index: 100;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.4);
+    }
+    @media (max-width: 768px) {
+        .modal-content,
+        .modal-delete {
+            width: 90%;
+            margin: 10% auto;
+        }
+
+        form {
+            padding: 1rem;
+        }
+    }
+    form,
+    .main fieldset,
+    .modal-content,
+    .modal-delete {
+        max-width: 100%;
+        width: 100%;
+    }
+    .modal-content,
+    .modal-delete {
+        width: 95% !important;
+        margin: 10% auto;
+    }
+    form,
+    .main fieldset,
+    .modal-content,
+    .modal-delete {
+        max-width: 100%;
+        width: 100%;
+    }
+
+    .modal-content,
+    .modal-delete {
+        width: 95% !important;
+        margin: 10% auto;
+    }
+
+    @media (min-width: 768px) {
+        .modal-content,
+        .modal-delete {
+            width: 70% !important;
+        }
+    }
+
+    @media (min-width: 1200px) {
+        .modal-content,
+        .modal-delete {
+            width: 25% !important;
+        }
+    }
+
+    textarea,
+    input[type="text"],
+    input[type="submit"] {
+        max-width: 100%;
+    }
+
+    center {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0 10px;
+    }
+
+    button {
+        white-space: nowrap;
+        margin: 5px;
+    }
+
+    .comment_text,
+    #teacher_answer_text,
+    #admin_answer_text {
+        word-break: break-word;
+        overflow-wrap: anywhere;
+    }
+    .modal-delete {
+        background: #ffffff !important;
+        border: 2px solid #e0e0e0;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        padding: 25px;
+        border-radius: 12px;
+    }
+
+    .delete-buttons button {
+        padding: 10px 25px;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: transform 0.2s;
+    }
+
+    .delete-buttons button:hover {
+        transform: translateY(-2px);
+
+    }
+
+    #yes-delete {
+        background: #ff4444 !important;
+        box-shadow: 0 3px 8px rgba(255,68,68,0.3);
+    }
+
+    #no-delete {
+        background: #00c851 !important;
+        box-shadow: 0 3px 8px rgba(0,200,81,0.3);
+    }
+
+    .close-modal {
+        color: #666 !important;
+        font-size: 24px;
+        top: 15px;
+        right: 20px;
+    }
+      .modal-content {
+        background: #ffffff !important; /* Сплошной белый фон */
+        border: 2px solid #e0e0e0 !important;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.15) !important;
+        padding: 25px !important;
+        border-radius: 12px !important;
+    }
+
+    .modal-content button[type="submit"] {
+        background: #3398d9 !important;
+        color: white !important;
+        padding: 10px 25px !important;
+        border-radius: 8px !important;
+        border: none !important;
+        margin-top: 15px !important;
+        cursor: pointer !important;
+        transition: all 0.3s ease !important;
+    }
+
+    .modal-content button[type="submit"]:hover {
+        background: #2878ad !important;
+        transform: translateY(-2px);
+        box-shadow: 0 3px 8px rgba(51,152,217,0.3);
+    }
+
+    .modal-content .close-modal {
+        color: #666 !important;
+        font-size: 28px !important;
+        text-shadow: none !important;
+        top: 15px !important;
+        right: 20px !important;
+        transition: color 0.3s ease !important;
+    }
+
+    .modal-content .close-modal:hover {
+        color: #ff4444 !important;
+    }
+
+    #text_of_update_comment {
+        width: 100% !important;
+        min-height: 120px !important;
+        padding: 15px !important;
+        border: 2px solid #e0e7f1 !important;
+        border-radius: 8px !important;
+        margin: 15px 0 !important;
+        font-size: 16px !important;
+        resize: vertical !important;
+    }
+    .delete-buttons {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+    }
+
+    .delete-buttons button {
+        width: 100%;
+        max-width: 200px;
+        margin: 0;
+        text-align: center;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    #writeComment{
+        margin-left: 15px;
+    }
+    .close-modal,
+    .close-answer-modal {
+        position: absolute !important;
+        right: 25px !important;
+        top: 20px !important;
+        font-size: 32px !important;
+        color: #444 !important;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        line-height: 1;
+        text-shadow: 0 2px 2px rgba(0,0,0,0.1);
+        z-index: 1;
+    }
+
+    .close-modal:hover,
+    .close-answer-modal:hover {
+        color: #ff4444 !important;
+        transform: scale(1.2);
+        text-shadow: 0 3px 6px rgba(0,0,0,0.15);
+    }
+
+    .modal-content,
+    .modal-delete,
+    #answer-modal .modal-content {
+        position: relative;
+        padding-top: 45px !important;
+    }
+
+    #answer-modal .close-answer-modal {
+        right: 30px !important;
+        top: 25px !important;
+        font-size: 36px !important;
+    }
+
+    #yes-delete {
+        background: #ffe8e8 !important;
+        color: #ff4444 !important;
+        border-radius: 20px !important;
+        padding: 0.6rem 1.2rem !important;
+        box-shadow: none !important;
+    }
+
+    #no-delete {
+        background: #e8f3ff !important;
+        color: #3398d9 !important;
+        border-radius: 20px !important;
+        padding: 0.6rem 1.2rem !important;
+        box-shadow: none !important;
+    }
+
+    #yes-delete:hover {
+        background: #ffd4d4 !important;
+        transform: none;
+    }
+
+    #no-delete:hover {
+        background: #d4e7ff !important;
+        transform: none;
+    }
+
+    .delete-buttons {
+        gap: 10px !important;
+        margin-top: 25px !important;
+    }
+    .modal-delete h4 {
+        color: #444;
+    }
+</style>
+
+
+{% block content %}
+
+    <center>
+      <a href="{% url 'task_detail' pk=task.pk %}"> <h1>{{task.title}} </h1></a>
+      <span id = "information_1" style = "color:blue;">Синий - ответ от администратора;   </span>
+      <span id = "information_2" style = "color:red;">Красный - ответ от преподавателя;</span>
+    </center>
+
+
+
+    {% if user.is_authenticated %}
+        <h4 style="color: green;">
+            <span id="writeComment">Написать комментарий:</span>
+        </h4>
+        <form action="{% url 'comment_list' pk=task.pk %}" method="post" id = "create_form">
+            {% csrf_token %}
+            <textarea id="input" name="input" placeholder="Текcт комментария" required></textarea>
+            <input type="number" id = "task_id" name = "task_id" value = {{task.pk}}>
+            <input type="submit" id = "submit" value = "Отправить">
+        </form>
+    {% else %}
+            <h4 style="color: #c0392b;">Вы не авторизованы в системе</h4>
+        <!--<a href="{% url 'account_login' %}">Войти</a>
+        <a href="{% url 'account_signup' %}">Зарегистрироваться</a>
+        -->
+    {% endif %}
+
+
+    <div class = "main">
+        {% for comment in comments %}
+            <fieldset id = "{{comment.id}}">
+                <legend>
+                  <span id = "username">{{comment.user.username}}</span>,
+                  <span>{% if comment.was_changed %} Изменён {% else %} {% endif %} {{comment.change_time}}</span>
+                </legend>
+                <label id = "comment_text_label">
+                    <span class = "comment_text" id  = "comment_text{{comment.pk}}" >{{comment.text}}</span>
+                </label>
+
+                {% if comment.teacher_answer %}
+                    <label id = "teacher_answer_text">
+                        <span>{{comment.teacher_answer}}</span>
+                    </label>
+                {% endif %}
+
+                {% if comment.admin_answer %}
+
+                    <label id = "admin_answer_text">
+                        <span id = "admin_answer_for{{comment.pk}}">{{comment.admin_answer}}</span>
+                    </label>
+                {% endif %}
+
+
+
+                {% if comment.user == user or user.is_superuser%}
+
+                <button
+                        class = "edit-comment"
+                        data-commentId="{{comment.id}}"
+                        data-commentEditUrl="{% url 'comment_update' pk=task.pk comment_pk=comment.pk %}"
+                        id = "edit-button{{comment.id}}"
+                        data-commentText = "{{comment.text}}">  Редактировать
+                </button>
+
+                <button
+                        class="delete-comment"
+                        data-commentDeleteUrl = "{% url 'comment_detail' pk=task.pk comment_pk=comment.pk %}"
+                        data-commentId="{{comment.id}}">   Удалить
+                </button>
+
+                {% endif %}
+
+                {% if user.is_superuser or user_is_teacher %}
+                    <button data-type="т"
+                            id = "admin-teacher-answer"
+                                                 >  Ответить
+                    </button>
+                {% endif %}
+            </fieldset>
+        {% endfor %}
+    </div>
+
+
+
+
+
+
+
+    <div id = "edit-modal">
+        <div class="modal-content">
+            <center><h4>Окно редактирования комментария</h4></center>
+            <div class = "close-modal" >
+                &times;
+            </div>
+
+            <form method="post" action="" id = "update_form">
+                {% csrf_token %}
+                <textarea name="text" id = "text_of_update_comment"></textarea>
+                <button type="submit">Сохранить</button>
+            </form>
+        </div>
+    </div>
+
+
+
+    <div id="delete-modal">
+        <div class="modal-delete">
+            <span class="close-modal" onclick="closeDeleteModal()">&times;</span>
+            <h4>Вы уверены, что хотите удалить комментарий?</h4>
+            <div class="delete-buttons">
+                <button id="no-delete">Отмена</button>
+                <button id="yes-delete">Удалить</button>
+            </div>
+        <form method="post" action = "" id = "delete_form" style="display:none;">
+            {% csrf_token %}
+            <input type = "number" name = "comment_id" id  = "delete_comment_id">
+            <input type = "submit">
+        </form>
+        </div>
+    </div>
+
+
+
+
+        <!-- Модальное окно для ответа  от администратора или преподавателя-->
+    <div id="answer-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-answer-modal">&times;</span>
+            <center><h4>Ответ на комментарий</h4></center>
+            <form id="answer-form" method="post">
+                {% csrf_token %}
+                <input type="hidden" id="answer-comment-id" name="comment_id" value = "{{comment.pk}}">
+                <input type="hidden" id = "answer_type" name = "answer_type">
+
+                <textarea name="answer_text" id = "answer_text"  required></textarea>
+                <button type="submit">Отправить ответ</button>
+            </form>
+        </div>
+    </div>
+
+{% endblock %}
+
+
+
+<script>
+
+
+
+    // ФУНКЦИИ ОТКРЫТИЯ И ЗАКРЫТИЯ МОДЕЛЬНОГО ОКНА
+    function closeEditModal() {
+        const modal = document.getElementById("edit-modal");
+        modal.style.display = "none";
+        modal.classList.remove('fade-in');
+    }
+
+    function openEditModal(comment_text, editCommentUrl, commentId) {
+        const modal = document.getElementById("edit-modal");
+        modal.style.display = "block";
+        form.action = editCommentUrl;
+        document.getElementById("text_of_update_comment").value = comment_text;
+        currentEditingCommentId = commentId;
+        modal.classList.add('fade-in');
+    }
+
+    // Закрытие модального окна при клике на крестик
+    document.querySelector('.close-modal').addEventListener('click', closeEditModal);
+
+    // ОБРАБАТЫВАЕМ РЕДАКТИРОВАНИЕ КОММЕНТАРИЕВ
+    let currentEditingCommentId = null;
+    let form = document.getElementById("update_form");
+
+    let currentEditingButton = null;
+
+    // Обработчик отправки формы или КНОПКИ ОТПРАВИТЬ!
+    form.addEventListener("submit", function(e) {
+        e.preventDefault();
+
+        // Обновляем текст комментария в самой форме
+        let text_in_form = document.getElementById("text_of_update_comment");
+        document.getElementById(`edit-button${currentEditingCommentId}`).setAttribute("data-commentText", text_in_form.value);
+        const formData = new FormData(form);
+
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const need_comment = document.getElementById(`comment_text${currentEditingCommentId}`);
+                if (need_comment) {
+                    need_comment.textContent = data.text;
+                }
+            } else {
+                alert("Ошибка при сохранении: " + (data.error || "Неизвестная ошибка"));
+            }
+            closeEditModal();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert("Ошибка сети при сохранении");
+        });
+    });
+
+    // Обработчики кнопок редактирования
+    document.querySelectorAll('.edit-comment').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const comment_pk = this.getAttribute('data-commentId');
+            const action = this.getAttribute('data-commentEditUrl');
+            const comment_text = this.getAttribute('data-commentText');
+
+            openEditModal(comment_text, action, comment_pk);
+        });
+    });
+
+
+    // ОБРАБАТЫВАЕМ УДАЛЕНИЕ КОММЕНТАРИЕВ
+
+    let currentCommentToDelete = null;
+
+    function openDeleteModal(commentId, deleteUrl) {
+        currentCommentToDelete = commentId;
+        document.getElementById("delete_comment_id").value = commentId;
+        document.getElementById("delete_form").action = deleteUrl;
+
+        const modal = document.getElementById("delete-modal");
+        modal.style.display = "block";
+
+        modal.classList.add('fade-in');
+    }
+
+    function closeDeleteModal() {
+        const modal = document.getElementById("delete-modal");
+        modal.style.display = "none";
+        modal.classList.remove('fade-in');
+    }
+
+
+
+    // Обработчики для кнопок удаления и отмены (добавляем один раз!)
+    document.getElementById("yes-delete").addEventListener('click', function(e) {
+        if (!currentCommentToDelete) return;
+
+        const form = document.getElementById("delete_form");
+        const formData = new FormData(form);
+
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Удаляем комментарий из DOM
+                const commentElement = document.getElementById(currentCommentToDelete);
+                if (commentElement) {
+                    commentElement.remove();
+                }
+            } else {
+                alert("Не удалось удалить комментарий");
+            }
+            closeDeleteModal();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert("Ошибка при удалении");
+            closeDeleteModal();
+        });
+    });
+
+    document.getElementById("no-delete").addEventListener('click', closeDeleteModal);
+
+    // Обработчики для кнопок удаления комментариев
+    document.querySelectorAll('.delete-comment').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const commentId = this.getAttribute('data-commentId');
+            const deleteUrl = this.getAttribute('data-commentDeleteUrl');
+            openDeleteModal(commentId, deleteUrl);
+        });
+    });
+
+    // Закрытие при клике вне модального окна
+    window.addEventListener('click', function(event) {
+        if (event.target == document.getElementById("edit-modal")) {
+            closeEditModal();
+        }
+        else if(event.target == document.getElementById("delete-modal")){
+            closeDeleteModal();
+        }
+    });
+
+
+
+
+
+
+
+    // ТЕПЕРЬ ОТВЕТЫ НА КОММЕНТАРИИ ОТ АДМИНИСТРАТОРА ИЛИ ПРЕПОДАВАТЕЛЯ
+
+    // Обработчики для ответа на комментарий
+    let currentAnswerCommentId = null;
+
+    let cur_commentId = null;
+
+    function openAnswerModal(commentId) {
+        currentAnswerCommentId = commentId;
+        document.getElementById("answer-comment-id").value = commentId;
+        document.getElementById("answer-modal").style.display = "block";
+
+        document.getElementById("answer-modal").classList.add("fade-in");
+        if (cur_commentId ){
+            document.getElementById("answer_text").value =  document.getElementById(`admin_answer_for${cur_commentId}`).textContent;
+        }
+    }
+
+
+
+    function closeAnswerModal() {
+        document.getElementById("answer-modal").style.display = "none";
+        document.getElementById("answer-modal").classList.remove("fade-in");
+    }
+
+
+    // Обработчик кнопки "Ответить"
+    document.querySelectorAll('#admin-teacher-answer').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const commentId = this.closest('fieldset').id;
+            cur_commentId = commentId;
+            openAnswerModal(commentId);
+        });
+    });
+
+    // Закрытие модалки ответа
+    document.querySelector('.close-answer-modal').addEventListener('click', closeAnswerModal);
+
+    // Обработка формы ответа
+    document.getElementById("answer-form").addEventListener("submit", function(e) {
+        e.preventDefault();
+
+
+        let answer_type = document.getElementById("answer_type");
+
+        let is_superuser = "{{user.is_superuser}}";
+
+        let is_teacher = "{{user_is_teacher}}";
+
+        if (is_superuser === "True"){
+           answer_type.setAttribute("value", "admin");
+        }
+
+        else if(is_teacher == "True"){
+            answer_type.setAttribute("value","teacher");
+        }
+
+        const formData = new FormData(this);
+
+        const url = "{% url 'comment_answer' %}";
+
+        fetch(url, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                closeAnswerModal();
+                // Обновляем страницу
+                location.reload();
+            } else {
+                alert("Ошибка");
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert("Ошибка сети");
+        });
+    });
+
+    // обработчик клика вне модалок:
+    window.addEventListener('click', function(event) {
+        if (event.target == document.getElementById("answer-modal")) {
+            closeAnswerModal();
+        }
+    });
+</script>
